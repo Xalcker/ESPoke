@@ -21,18 +21,22 @@
 - **Format**: Compact Disc Graphics
 - **Resolution**: 300x216 pixels (displayed in 288x192 region)
 - **Commands Supported**: 
-  - Memory Preset (0)
-  - Border Preset (1)
-  - Tile Block (2)
-  - Tile Block XOR (6)
-  - Scroll (20, 24)
+  - Memory Preset (1)
+  - Border Preset (2)
+  - Tile Block (6)
+  - Tile Block XOR (38)
+  - Scroll Preset (20)
+  - Scroll Copy (24)
   - Define Transparent Color (28)
   - Load Static Color Table (30)
-  - Load Static Data (38)
+  - Load Static Data (31) ⚠️ Value is 31, NOT 38 (38 conflicts with Tile Block XOR)
 
 ### Audio Output
-- **Method**: I2S or DAC for audio playback
+- **Method**: LED PWM on GPIO 18
+- **Frequency**: 20 MHz
+- **Resolution**: 7 bits
 - **Format**: MP3/OGG from SD card
+- **Filter**: RC low-pass (1kΩ + 10nF)
 
 ### Controls
 - **Play/Pause Button**: GPIO 0
@@ -58,14 +62,14 @@
 │   ├── CDGParser.cpp      # CDG file parser
 │   ├── CDGParser.h        # CDG parser header
 │   ├── Player.cpp         # Karaoke player logic
-│   └── Player.h           # Player header
-├── include/
-│   └── README
-├── lib/
-│   └── README
+│   ├── Player.h           # Player header
+│   ├── AudioOutput.cpp    # Audio PWM output
+│   ├── AudioOutput.h      # Audio header
+│   └── font6x8.h          # 6x8 font bitmap
 ├── test/
 │   └── README
 ├── platformio.ini         # PlatformIO configuration
+├── README.md              # User documentation
 └── SPEC.md               # This specification
 ```
 

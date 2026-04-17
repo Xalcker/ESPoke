@@ -14,46 +14,101 @@ Reproductor de karaoke para ESP32 con salida de video compuesto NTSC.
 ### Placa
 - ESP32 (cualquier variante con DAC)
 
-### Conexiones de Video Compuesto
-| ESP32 | RCA Jack | Descripción |
-|-------|----------|-------------|
-| GND   | Exterior (negativo) | Masa |
-| GPIO 25 (DAC1) | Centro (video) | Señal de video |
+### Diagrama Completo de Conexiones
 
-### Conexiones de Audio
-| ESP32 | Componente | Notas |
-|-------|------------|-------|
-| GPIO 18 | Salida audio | Requiere filtro RC |
-| GND | Masa audio | |
-
-**Filtro RC recomendado para audio:**
 ```
-GPIO 18 ---/\/\/\/---|----> a altavoz
-         1k         |
-                    ---
-                    --- 10nf
-                     |
-                    GND
+                    ┌─────────────────┐
+                    │     ESP32       │
+                    │                 │
+                    │  ┌───────────┐  │
+                    │  │   GPIO    │  │
+                    │  │    25     │──┼────────────────────┐
+                    │  │   DAC1    │  │                    │
+                    │  │   GND     │──┼────────────────────┤
+                    │  │    0      │  │                    │
+                    │  │    2      │  │                    │
+                    │  │    4      │  │                    │
+                    │  │   13      │  │                    │
+                    │  │   15      │  │                    │
+                    │  │   18      │──┼────────────────────┤
+                    │  │   19      │  │                    │
+                    │  │   23      │  │                    │
+                    │  │    5      │  │                    │
+                    │  └───────────┘  │                    │
+                    └─────────────────┘                    │
+                                                           │
+         ┌─────────────────────────────────────────────────┤
+         │                    RCA JACK                      │
+         │              (Video Compuesto)                  │
+         │                                                 │
+         │    ┌──────────────┐                             │
+         │    │   1 Centre   │◄── GPIO 25 (DAC1)            │
+         │    │              │                             │
+         │    │  2 Outer     │◄── GND                       │
+         │    └──────────────┘                             │
+         └─────────────────────────────────────────────────┘
+
+         ┌─────────────────────────────────────────────────┐
+         │              AUDIO OUTPUT (GPIO 18)              │
+         │                                                  │
+         │    GPIO 18 ──┬──[ 1kΩ ]──┬───► Speaker           │
+         │              │           │                       │
+         │              │           ├───[ 10nF ]── GND       │
+         │              │           │                       │
+         │              └───────────┘                       │
+         └─────────────────────────────────────────────────┘
+
+         ┌─────────────────────────────────────────────────┐
+         │                    SD CARD                      │
+         │              (Lector SPI)                       │
+         │                                                  │
+         │    ESP32      Lector SD                         │
+         │    GPIO 23 ──► MOSI                             │
+         │    GPIO 19 ◄── MISO                             │
+         │    GPIO 18 ──► CLK                              │
+         │    GPIO 5  ──► CS                               │
+         │    GND      ──► GND                             │
+         │    3.3V     ──► VCC (si soporta 3.3V)          │
+         └─────────────────────────────────────────────────┘
+
+         ┌─────────────────────────────────────────────────┐
+         │                   BOTONES                       │
+         │            (Todos con Pull-Up interno)          │
+         │                                                  │
+         │    ESP32      Función         Botón             │
+         │    GPIO  0 ──► Play/Pause ◄───► [SW1]           │
+         │    GPIO  2 ──► Siguiente   ◄───► [SW2]          │
+         │    GPIO  4 ──► Anterior    ◄───► [SW3]          │
+         │    GPIO 13 ──► Vol-        ◄───► [SW4]          │
+         │    GPIO 15 ──► Vol+        ◄───► [SW5]          │
+         │    GND      ──► GND (común)                     │
+         │                                                  │
+         │    [SW1]                    ▲                    │
+         │      │                     │                    │
+         │      └─────────[ GND ]─────┘                    │
+         │                                                  │
+         │    (Los botones conectan GPIO a GND)             │
+         └─────────────────────────────────────────────────┘
 ```
 
-### Botones de Control
-| GPIO | Función | Notas |
-|------|---------|-------|
-| 0 | Play/Pause | Boot si se mantiene presionado |
-| 2 | Siguiente | Siguiente pista |
-| 4 | Anterior | Pista anterior |
-| 15 | Volumen + | Aumentar volumen |
-| 13 | Volumen - | Bajar volumen |
+### Resumen de Conexiones
 
-Todos los botones usan pull-up interno (conectar a GND cuando se presionan).
+| ESP32 GPIO | Función | Conexión Física |
+|------------|---------|-----------------|
+| 25 (DAC1) | Video | RCA centro (video) |
+| GND | Masa | RCA exterior (masa) |
+| 18 | Audio Out | Filtro RC → Speaker |
+| 23 | SD MOSI | SD lector MOSI |
+| 19 | SD MISO | SD lector MISO |
+| 18 | SD CLK | SD lector CLK |
+| 5 | SD CS | SD lector CS |
+| 0 | Botón Play/Pause | Botón → GND |
+| 2 | Botón Siguiente | Botón → GND |
+| 4 | Botón Anterior | Botón → GND |
+| 13 | Botón Vol- | Botón → GND |
+| 15 | Botón Vol+ | Botón → GND |
 
-### Montaje SD Card
-| ESP32 | Lector SD |
-|-------|-----------|
-| GPIO 23 | MOSI |
-| GPIO 19 | MISO |
-| GPIO 18 | CLK |
-| GPIO 5 | CS |
+**Nota**: GPIO 18 se usa para audio PWM Y clock SD. El filtro RC para audio está en serie, no afecta la señal SPI.
 
 ## Instalación
 

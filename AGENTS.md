@@ -32,11 +32,34 @@ The `ESP32CompositeColorVideo` library uses different method names than expected
 
 ## Hardware
 
-- Video: GPIO 25 (DAC1) → RCA center pin
-- Audio: GPIO 18 → filtro RC (1kΩ + 10nF)
-- SD Card: SPI pins (MOSI=23, MISO=19, CLK=18, CS=5)
+```
+ESP32 GPIO Connections:
+
+  Video (Composite NTSC):
+    GPIO 25 (DAC1) ──► RCA Center (video)
+    GND            ──► RCA Outer (ground)
+
+  Audio (PWM):
+    GPIO 18 ──┬──[1kΩ]──┬──► Speaker
+              │         ├──[10nF]──► GND
+
+  SD Card (SPI):
+    GPIO 23 ──► MOSI
+    GPIO 19 ◄── MISO
+    GPIO 18 ──► CLK
+    GPIO  5 ──► CS
+
+  Buttons (Pull-Up, active LOW):
+    GPIO  0 ──► [Play/Pause] ──► GND
+    GPIO  2 ──► [Next] ──► GND
+    GPIO  4 ──► [Prev] ──► GND
+    GPIO 13 ──► [Vol-] ──► GND
+    GPIO 15 ──► [Vol+] ──► GND
+```
 
 ## CDG Parser Fixes
 
 - `CDG_LOAD_STATIC_DATA` must be value 31, NOT 38 (38 conflicts with `CDG_TILE_BLOCK_XOR`)
 - Remove duplicate case values in switch statements
+- Command values in CDGParser.h are correct (31 for Load Static Data, 38 for Tile Block XOR)
+- State colorTable is 16*2 = 32 bytes (16 for primary + 16 for secondary palette)
