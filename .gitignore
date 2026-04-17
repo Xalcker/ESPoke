@@ -1,0 +1,35 @@
+# PlatformIO
+.pio/
+.pioenvs
+.piolibdeps
+.piobuild/
+lib/
+build/
+dist/
+
+# Visual Studio Code
+.vscode/
+
+# ESP32
+*.bin
+*.elf
+*.map
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
