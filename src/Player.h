@@ -1,0 +1,49 @@
+#ifndef PLAYER_H
+#define PLAYER_H
+
+#include <Arduino.h>
+#include <FS.h>
+#include <SD.h>
+#include "CDGParser.h"
+
+#define MAX_FILES 100
+
+class Player {
+public:
+    Player();
+    
+    bool init();
+    bool scanDirectory(const char* path);
+    void play();
+    void pause();
+    void next();
+    void previous();
+    void setVolume(uint8_t vol);
+    uint8_t getVolume() { return volume; }
+    bool isPlaying() { return playing; }
+    
+    void update();
+    
+    CDGParser& getCDGParser() { return cdgParser; }
+    int getCurrentFileIndex() { return currentIndex; }
+    int getTotalFiles() { return totalFiles; }
+    const char* getCurrentFileName() { return currentFileName; }
+    
+private:
+    File cdgFile;
+    File mp3File;
+    CDGParser cdgParser;
+    
+    char fileList[MAX_FILES][64];
+    int totalFiles;
+    int currentIndex;
+    uint8_t volume;
+    bool playing;
+    char currentFileName[64];
+    
+    void loadSong(int index);
+    void closeSong();
+    String getMP3Filename(const char* cdgFilename);
+};
+
+#endif
