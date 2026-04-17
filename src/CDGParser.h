@@ -32,6 +32,7 @@ public:
     CDGParser();
     bool init(File cdgFile);
     bool getNextCommand();
+    bool getNextCommands(int maxCommands);
     uint8_t* getColorTable() { return colorTable; }
     uint16_t getTransparentColor() { return transparentColor; }
     

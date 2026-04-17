@@ -5,6 +5,7 @@
 #include <FS.h>
 #include <SD.h>
 #include "CDGParser.h"
+#include "AudioPlayer.h"
 
 #define MAX_FILES 100
 
@@ -31,7 +32,7 @@ public:
     
 private:
     File cdgFile;
-    File mp3File;
+    AudioPlayer audioPlayer;
     CDGParser cdgParser;
     
     char fileList[MAX_FILES][64];

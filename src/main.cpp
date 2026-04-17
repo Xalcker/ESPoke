@@ -34,7 +34,6 @@ QueueHandle_t cdgCommandQueue;
 void cdgAudioTask(void* param);
 
 static unsigned long demoFrameCount = 0;
-static unsigned long beepEndTime = 0;
 
 unsigned long lastFrameTime = 0;
 const int FRAME_RATE = 10;
@@ -131,11 +130,6 @@ void setup() {
     graphics.init();
     graphics.setFont(font);
     
-    ledcSetup(1, 523, 8);
-    ledcAttachPin(AUDIO_PIN, 1);
-    ledcWrite(1, 50);
-    beepEndTime = millis() + 300;
-    
     Serial.println("Initializing player...");
     if (player.init()) {
         player.scanDirectory("/");
@@ -216,11 +210,18 @@ void renderCDG() {
     for (int y = 0; y < CDG_DISPLAY_HEIGHT; y++) {
         for (int x = 0; x < CDG_DISPLAY_WIDTH; x++) {
             int srcX = (x + state.scrollOffsetX) % CDG_WIDTH;
+            if (srcX < 0) srcX += CDG_WIDTH;
             int srcY = (y + state.scrollOffsetY) % CDG_HEIGHT;
+            if (srcY < 0) srcY += CDG_HEIGHT;
             uint8_t colorIndex = state.pixels[srcX + srcY * CDG_WIDTH];
             
-            if (colorIndex != state.transparentColor && colorIndex < 16) {
-                uint8_t color = state.colorTable[colorIndex & 0x0F];
+            if (colorIndex != state.transparentColor) {
+                uint8_t color;
+                if (colorIndex >= 16) {
+                    color = state.colorTable[16 + (colorIndex & 0x0F)];
+                } else {
+                    color = state.colorTable[colorIndex & 0x0F];
+                }
                 uint8_t hue = (color >> 4) & 0x0F;
                 uint8_t brightness = color & 0x0F;
                 graphics.setHue(hue);
@@ -247,9 +248,12 @@ void renderUI() {
 void cdgAudioTask(void* param) {
     Serial.println("CDG/Audio task started on Core 0");
     
+    const int COMMANDS_PER_FRAME = 75;
+    
     while(true) {
         if (player.isPlaying()) {
             player.update();
+            player.getCDGParser().getNextCommands(COMMANDS_PER_FRAME);
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -262,11 +266,6 @@ void loop() {
     if (now - lastFrameTime > (1000 / FRAME_RATE)) {
         lastFrameTime = now;
         demoFrameCount++;
-    }
-    
-    if (beepEndTime && millis() >= beepEndTime) {
-        ledcWrite(1, 0);
-        beepEndTime = 0;
     }
     
     graphics.setHue(0);

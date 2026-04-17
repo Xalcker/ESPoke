@@ -48,6 +48,14 @@ bool CDGParser::getNextCommand() {
     return true;
 }
 
+bool CDGParser::getNextCommands(int maxCommands) {
+    int count = 0;
+    while (count < maxCommands && getNextCommand()) {
+        count++;
+    }
+    return count > 0;
+}
+
 void CDGParser::executeCommand(uint8_t instruction, uint16_t data) {
     uint8_t rawData[4];
     rawData[0] = data & 0xFF;
@@ -174,6 +182,25 @@ void CDGParser::scroll(int hScroll, int vScroll, bool copy) {
     while (newX >= CDG_WIDTH) newX -= CDG_WIDTH;
     while (newY < 0) newY += CDG_HEIGHT;
     while (newY >= CDG_HEIGHT) newY -= CDG_HEIGHT;
+    
+    if (newX != state.scrollOffsetX || newY != state.scrollVDirection) {
+        uint8_t tempPixels[CDG_WIDTH * CDG_HEIGHT];
+        memcpy(tempPixels, state.pixels, sizeof(tempPixels));
+        
+        int shiftX = (newX - state.scrollOffsetX);
+        int shiftY = (newY - state.scrollOffsetY);
+        
+        if (shiftX < 0) shiftX += CDG_WIDTH;
+        if (shiftY < 0) shiftY += CDG_HEIGHT;
+        
+        for (int y = 0; y < CDG_HEIGHT; y++) {
+            for (int x = 0; x < CDG_WIDTH; x++) {
+                int srcX = (x - shiftX + CDG_WIDTH) % CDG_WIDTH;
+                int srcY = (y - shiftY + CDG_HEIGHT) % CDG_HEIGHT;
+                state.pixels[x + y * CDG_WIDTH] = tempPixels[srcX + srcY * CDG_WIDTH];
+            }
+        }
+    }
     
     state.scrollOffsetX = newX;
     state.scrollOffsetY = newY;
