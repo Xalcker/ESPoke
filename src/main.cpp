@@ -170,6 +170,36 @@ void drawWaveDecoration(int y, unsigned long frame) {
     }
 }
 
+void drawMicrophoneIcon(int cx, int cy, unsigned long frame) {
+    int hue = (frame / 20) % 16;
+    graphics.setHue(hue);
+    
+    graphics.fillRect(cx - 4, cy - 16, 8, 20, 50);
+    graphics.fillRect(cx - 6, cy - 12, 12, 12, 40);
+    
+    graphics.fillRect(cx - 2, cy + 4, 4, 8, 45);
+    graphics.fillRect(cx - 8, cy + 12, 16, 2, 45);
+    graphics.fillRect(cx - 6, cy + 14, 12, 6, 50);
+    
+    graphics.setHue((hue + 8) % 16);
+    graphics.fillRect(cx - 3, cy - 10, 6, 8, 60);
+}
+
+void drawMusicNotes(int cx, int cy, unsigned long frame) {
+    int hue = (frame / 25) % 16;
+    graphics.setHue(hue);
+    
+    float bounce = sin(frame * 0.08f) * 4;
+    
+    graphics.fillRect(cx - 12, cy - 6 + bounce, 2, 12, 45);
+    graphics.fillRect(cx - 12, cy - 14 + bounce, 8, 2, 45);
+    graphics.dot(cx - 4, cy - 4 + bounce, 50);
+    
+    graphics.fillRect(cx + 6, cy + 2 - bounce, 2, 10, 40);
+    graphics.fillRect(cx + 6, cy - 6 - bounce, 8, 2, 40);
+    graphics.dot(cx + 14, cy - 2 - bounce, 55);
+}
+
 void renderDemo(unsigned long frameCount) {
     if (!demoInitialized) {
         initDemo();
@@ -180,10 +210,17 @@ void renderDemo(unsigned long frameCount) {
     
     drawAnimatedLogo(centerX, centerY, frameCount);
     
+    drawMicrophoneIcon(centerX - 55, centerY - 10, frameCount);
+    drawMusicNotes(centerX + 55, centerY - 10, frameCount);
+    
     graphics.setHue(0);
     graphics.setTextColor(50);
-    graphics.setCursor(50, 5);
-    graphics.print("ESP32 Karaoke Player");
+    graphics.setCursor(70, 5);
+    graphics.print("ESpoke!");
+    
+    graphics.setTextColor(35);
+    graphics.setCursor(35, 18);
+    graphics.print("Karaoke Player");
     
     drawWaveDecoration(185, frameCount);
     drawWaveDecoration(195, frameCount);
