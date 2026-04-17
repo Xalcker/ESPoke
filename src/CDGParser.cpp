@@ -69,7 +69,6 @@ void CDGParser::executeCommand(uint8_t instruction, uint16_t data) {
             break;
             
         case CDG_TILE_BLOCK_XOR:
-        case CDG_TILE_BLOCK_XOR2:
             tileBlock(rawData, true);
             break;
             
