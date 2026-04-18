@@ -1,14 +1,14 @@
-# Guía de Compilación - ESPoke
+# Build Guide - ESPoke
 
-Reproductor de karaoke para ESP32 con video compuesto.
+Karaoke player for ESP32 with composite video.
 
-## Requisitos Previos
+## Prerequisites
 
 ### Hardware
-- Placa ESP32 (cualquier variante)
-- Cable USB para programación
-- Lector de tarjetas SD
-- Componentes para conexiones (ver README.md)
+- ESP32 board (any variant)
+- USB cable for programming
+- SD card reader
+- Components for connections (see README.md)
 
 ### Software
 - Python 3.x
@@ -16,13 +16,13 @@ Reproductor de karaoke para ESP32 con video compuesto.
 
 ---
 
-## Instalación
+## Installation
 
-### 1. Instalar Python
+### 1. Install Python
 
 **Windows:**
-Descargar de https://www.python.org/downloads/
-(marcar "Add Python to PATH" durante instalación)
+Download from https://www.python.org/downloads/
+(check "Add Python to PATH" during installation)
 
 **Linux:**
 ```bash
@@ -35,48 +35,48 @@ sudo apt install python3 python3-pip
 brew install python3
 ```
 
-### 2. Instalar PlatformIO Core
+### 2. Install PlatformIO Core
 
 ```bash
 pip install platformio
 ```
 
-O usando el instalador oficial:
+Or using the official installer:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py | python3
 ```
 
-### 3. Verificar instalación
+### 3. Verify installation
 
 ```bash
 pio --version
 ```
 
-Debería mostrar algo como `PlatformIO Core, version x.x.x`
+Should display something like `PlatformIO Core, version x.x.x`
 
 ---
 
-## Compilar el Proyecto
+## Build the Project
 
-### Navegar al directorio del proyecto
+### Navigate to the project directory
 
 ```bash
-cd ruta/a/ESPoke
+cd path/to/ESPoke
 ```
 
-### Compilar
+### Build
 
 ```bash
 pio run
 ```
 
-Esto descargará las dependencias necesarias y compilará el proyecto.
+This will download the necessary dependencies and build the project.
 
-**Primera compilación puede tomar varios minutos** (descarga de toolchain, librerías, etc.)
+**First build may take several minutes** (toolchain download, libraries, etc.)
 
-### Ver salida de compilación
+### Build output
 
-Si todo sale bien, verás algo como:
+If everything goes well, you'll see something like:
 
 ```
 Parsing XML...
@@ -89,40 +89,40 @@ Flash: [==        ]  18.5% (used 484128 bytes from 1310720 bytes)
 
 ---
 
-## Subir al ESP32
+## Upload to ESP32
 
-### 1. Conectar el ESP32
+### 1. Connect the ESP32
 
-Conectar el ESP32 al ordenador mediante cable USB.
+Connect the ESP32 to your computer via USB cable.
 
-### 2. Identificar el puerto
+### 2. Identify the port
 
 **Windows:**
 ```bash
 pio device list
 ```
-Busca algo como `COM3`, `COM4`, etc.
+Look for something like `COM3`, `COM4`, etc.
 
 **Linux/macOS:**
 ```bash
 pio device list
 ```
-Busca algo como `/dev/ttyUSB0`, `/dev/cu.usbserial-xxx`, etc.
+Look for something like `/dev/ttyUSB0`, `/dev/cu.usbserial-xxx`, etc.
 
-### 3. Subir el firmware
+### 3. Upload the firmware
 
 ```bash
 pio run --target upload
 ```
 
-O especificar el puerto:
+Or specify the port:
 ```bash
 pio run --target upload --upload-port COM3
 ```
 
-### 4. Monitor serie (opcional)
+### 4. Serial monitor (optional)
 
-Para ver los mensajes del programa:
+To view program messages:
 
 ```bash
 pio device monitor
@@ -130,29 +130,29 @@ pio device monitor
 
 ---
 
-## Solución de Problemas
+## Troubleshooting
 
 ### Error: "python not found"
 
-Agregar Python al PATH o usar `python3` en lugar de `python`.
+Add Python to PATH or use `python3` instead of `python`.
 
-### Error: "Permission denied" al subir
+### Error: "Permission denied" when uploading
 
 **Linux/macOS:**
 ```bash
 sudo usermod -a -G dialout $USER
-# Cerrar sesión y volver a entrar
+# Log out and log back in
 ```
 
 ### Error: "Failed to connect"
 
-- Verificar que el cable USB funciona
-- Presionar botón BOOT del ESP32 mientras se conecta
-- Seleccionar el puerto correcto
+- Verify the USB cable works
+- Press the ESP32 BOOT button while connecting
+- Select the correct port
 
-### Error de compilación de librerías
+### Build error with libraries
 
-Limpiar y recompilar:
+Clean and rebuild:
 ```bash
 pio run --target clean
 pio run
@@ -160,48 +160,48 @@ pio run
 
 ---
 
-## Personalización
+## Customization
 
-### Cambiar pines
+### Change pins
 
-Editar `src/main. cpp`:
+Edit `src/main.cpp`:
 ```cpp
-#define BTN_PLAY 0      // Cambiar GPIO
+#define BTN_PLAY 0      // Change GPIO
 #define BTN_NEXT 2
 // etc.
 
-#define PIN_DAC 25      // Pin de video
-#define AUDIO_PIN 18    // Pin de audio
+#define PIN_DAC 25      // Video pin
+#define AUDIO_PIN 18    // Audio pin
 ```
 
-### Cambiar velocidad de frames
+### Change frame rate
 
-En `src/main.cpp`:
+In `src/main.cpp`:
 ```cpp
-const int FRAME__RATE = 10;  // Frames por segundo para CDG
+const int FRAME_RATE = 10;  // Frames per second for CDG
 ```
 
 ---
 
-## Comandos Útiles de PlatformIO
+## Useful PlatformIO Commands
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `pio run` | Compilar |
-| `pio run --target upload` | Compilar y subir |
-| `pio device list` | Listar puertos serie |
-| `pio device monitor` | Abrir monitor serie |
-| `pio run --target clean` | Limpiar archivos de compilación |
-| `pio lib list` | Listar librerías instaladas |
-| `pio pkg list` | Listar dependencias del proyecto |
+| `pio run` | Build |
+| `pio run --target upload` | Build and upload |
+| `pio device list` | List serial ports |
+| `pio device monitor` | Open serial monitor |
+| `pio run --target clean` | Clean build files |
+| `pio lib list` | List installed libraries |
+| `pio pkg list` | List project dependencies |
 
 ---
 
-## Siguiente Paso
+## Next Steps
 
-Una vez subido el firmware:
-1. Conectar el hardware (ver README.md)
-2. Colocar archivos .cdg y .mp3 en la SD card
-3. Alimentar el ESP32 y conectar a TV
+Once the firmware is uploaded:
+1. Connect the hardware (see README.md)
+2. Place .cdg and .mp3 files on the SD card
+3. Power the ESP32 and connect to a TV
 
-Para más detalles técnicos, ver README.md.
+For more technical details, see README.md.

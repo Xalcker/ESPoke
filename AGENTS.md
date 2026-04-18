@@ -71,7 +71,7 @@ ESP32 GPIO Connections:
 
 ## CDG Parser Fixes
 
-- `CDG_LOAD_STATIC_DATA` must be value 31, NOT 38 (38 conflicts with `CDG_TILE_BLOCK_XOR`)
+- `CDG_LOAD_COLOR_TABLE_HIGH` must be value 31, NOT 38 (38 conflicts with `CDG_TILE_BLOCK_XOR`)
 - Remove duplicate case values in switch statements
-- Command values in CDGParser.h are correct (31 for Load Static Data, 38 for Tile Block XOR)
+- Command values in CDGParser.h are correct (30 for Load Color Table Low, 31 for Load Color Table High, 38 for Tile Block XOR)
 - State colorTable is 16*2 = 32 bytes (16 for primary + 16 for secondary palette)

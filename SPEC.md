@@ -28,8 +28,8 @@
   - Scroll Preset (20)
   - Scroll Copy (24)
   - Define Transparent Color (28)
-  - Load Static Color Table (30)
-  - Load Static Data (31) ⚠️ Value is 31, NOT 38 (38 conflicts with Tile Block XOR)
+  - Load Color Table Low (30)
+  - Load Color Table High (31) ⚠️ Value is 31, NOT 38 (38 conflicts with Tile Block XOR)
 
 ### Audio Output
 - **Method**: LED PWM on GPIO 18

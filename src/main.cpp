@@ -126,13 +126,13 @@ void renderBrowser() {
     graphics.setHue(0);
     graphics.setTextColor(55);
     graphics.setCursor(4, TOP_MARGIN + 3);
-    graphics.print("ESpoke! - Seleccionar cancion");
+    graphics.print("ESPoke! - Select a song");
 
     if (total == 0) {
         graphics.setHue(0);
         graphics.setTextColor(40);
         graphics.setCursor(55, 110);
-        graphics.print("No hay archivos CDG en SD");
+        graphics.print("No CDG files found on SD");
     } else {
 
     // Ensure selection is in visible range
@@ -201,7 +201,7 @@ void renderBrowser() {
     graphics.setHue(0);
     graphics.setTextColor(25);
     graphics.setCursor(4, 240 - TOP_MARGIN);
-    graphics.print("PLAY:ok  NEXT/PREV:navegar");
+    graphics.print("PLAY:ok  NEXT/PREV:browse");
 
     // File count
     graphics.setCursor(250, 240 - TOP_MARGIN);
