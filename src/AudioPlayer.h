@@ -11,7 +11,7 @@
 #define AUDIO_PIN 18
 
 // LEDC config
-#define AUDIO_LEDC_CHANNEL 0
+#define AUDIO_LEDC_CHANNEL 1
 #define AUDIO_LEDC_FREQ    40000  // PWM carrier frequency (well above audible)
 #define AUDIO_LEDC_BITS    8      // 8-bit resolution (0-255)
 

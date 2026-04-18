@@ -33,9 +33,10 @@
 
 ### Audio Output
 - **Method**: LED PWM on GPIO 18
-- **Frequency**: 20 MHz
-- **Resolution**: 7 bits
-- **Format**: MP3/OGG from SD card
+- **LEDC Channel**: 1
+- **Frequency**: 40 kHz PWM carrier
+- **Resolution**: 8 bits
+- **Format**: MP3 from SD card
 - **Filter**: RC low-pass (1kΩ + 10nF)
 
 ### SD Card (SPI)
@@ -43,6 +44,7 @@
 - **MISO**: GPIO 19
 - **CLK**: GPIO 14
 - **CS**: GPIO 5
+- **DMA Channel**: 2
 
 ### Controls
 - **Play/Pause Button**: GPIO 0

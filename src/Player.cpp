@@ -5,7 +5,7 @@ Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false) {
 }
 
 bool Player::init(SPIClass &spi, uint8_t csPin) {
-    if (!SD.begin(csPin, spi)) {
+    if (!SD.begin(csPin, spi, 2)) {
         Serial.println("SD Card initialization failed!");
         return false;
     }
