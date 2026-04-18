@@ -32,12 +32,16 @@
 enum AppState {
     STATE_SPLASH,
     STATE_BROWSER,
-    STATE_PLAYING
+    STATE_PLAYING,
+    STATE_SCREENSAVER
 };
 
 AppState appState = STATE_SPLASH;
 unsigned long splashStartTime = 0;
 const unsigned long SPLASH_DURATION = 3000; // 3 seconds
+
+unsigned long lastActivityTime = 0;
+const unsigned long SCREENSAVER_TIMEOUT = 300000; // 5 minutes
 
 int browserSelection = 0;   // currently highlighted file in browser
 int browserScrollTop = 0;   // first visible file index
@@ -212,17 +216,19 @@ void updateBrowser() {
 
     if (debounceButton(BTN_NEXT)) {
         browserSelection = (browserSelection + 1) % total;
+        lastActivityTime = millis();
     }
 
     if (debounceButton(BTN_PREV)) {
         browserSelection = (browserSelection - 1 + total) % total;
+        lastActivityTime = millis();
     }
 
     if (debounceButton(BTN_PLAY)) {
-        // Select this file and start playing
         player.selectSong(browserSelection);
         player.play();
         appState = STATE_PLAYING;
+        lastActivityTime = millis();
     }
 }
 
@@ -269,9 +275,9 @@ void renderPlayingUI() {
 
 void updatePlaying() {
     if (debounceButton(BTN_PLAY)) {
-        // Stop and go back to browser
         player.pause();
         appState = STATE_BROWSER;
+        lastActivityTime = millis();
         return;
     }
 
@@ -280,6 +286,7 @@ void updatePlaying() {
         browserSelection = (browserSelection + 1) % total;
         player.selectSong(browserSelection);
         player.play();
+        lastActivityTime = millis();
     }
 
     if (debounceButton(BTN_PREV)) {
@@ -287,19 +294,45 @@ void updatePlaying() {
         browserSelection = (browserSelection - 1 + total) % total;
         player.selectSong(browserSelection);
         player.play();
+        lastActivityTime = millis();
     }
 
     if (debounceButton(BTN_VOL_UP)) {
         uint8_t vol = player.getVolume();
         if (vol <= 239) player.setVolume(vol + 16);
         else player.setVolume(255);
+        lastActivityTime = millis();
     }
 
     if (debounceButton(BTN_VOL_DN)) {
         uint8_t vol = player.getVolume();
         if (vol >= 16) player.setVolume(vol - 16);
         else player.setVolume(0);
+        lastActivityTime = millis();
     }
+}
+
+// ============================================================
+// Screensaver (static noise)
+// ============================================================
+void renderScreensaver() {
+    int xres = CompositeColorOutput::XRES;
+    int yres = CompositeColorOutput::YRES;
+
+    for (int y = 0; y < yres; y++) {
+        for (int x = 0; x < xres; x++) {
+            int hue = random(16);
+            uint8_t brightness = random(256);
+            graphics.setHue(hue);
+            graphics.dot(x, y, brightness);
+        }
+    }
+}
+
+bool checkScreensaverWake() {
+    return debounceButton(BTN_PLAY) || debounceButton(BTN_NEXT) ||
+           debounceButton(BTN_PREV) || debounceButton(BTN_VOL_UP) ||
+           debounceButton(BTN_VOL_DN);
 }
 
 // ============================================================
@@ -356,6 +389,7 @@ void setup() {
     // Start with splash
     appState = STATE_SPLASH;
     splashStartTime = millis();
+    lastActivityTime = millis();
 
     Serial.println("Initializing player...");
 
@@ -390,14 +424,22 @@ void loop() {
     lastFrameTime = now;
     frameCount++;
 
-    // Input handling per state
+    if (appState == STATE_BROWSER || appState == STATE_PLAYING) {
+        if (now - lastActivityTime >= SCREENSAVER_TIMEOUT) {
+            appState = STATE_SCREENSAVER;
+        }
+    }
+
     switch (appState) {
         case STATE_SPLASH:  updateSplash();  break;
         case STATE_BROWSER: updateBrowser(); break;
         case STATE_PLAYING: updatePlaying(); break;
+        case STATE_SCREENSAVER: {
+            if (checkScreensaverWake()) appState = STATE_BROWSER;
+            break;
+        }
     }
 
-    // Render
     graphics.setHue(0);
     graphics.begin(0);
 
@@ -408,6 +450,7 @@ void loop() {
             renderCDG();
             renderPlayingUI();
             break;
+        case STATE_SCREENSAVER: renderScreensaver(); break;
     }
 
     graphics.end();
