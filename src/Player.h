@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <SD.h>
+#include <SPI.h>
 #include "CDGParser.h"
 #include "AudioPlayer.h"
 
@@ -13,12 +14,13 @@ class Player {
 public:
     Player();
     
-    bool init();
+    bool init(SPIClass &spi, uint8_t csPin);
     bool scanDirectory(const char* path);
     void play();
     void pause();
     void next();
     void previous();
+    void selectSong(int index);
     void setVolume(uint8_t vol);
     uint8_t getVolume() { return volume; }
     bool isPlaying() { return playing; }
@@ -29,6 +31,7 @@ public:
     int getCurrentFileIndex() { return currentIndex; }
     int getTotalFiles() { return totalFiles; }
     const char* getCurrentFileName() { return currentFileName; }
+    const char* getFileName(int index);
     
 private:
     File cdgFile;

@@ -1,19 +1,22 @@
 # PlatformIO
 .pio/
-.pioenvs
-.piolibdeps
+.pioenvs/
+.piolibdeps/
 .piobuild/
-lib/
+
+# Build artifacts
 build/
 dist/
+*.bin
+*.elf
+*.map
+*.hex
 
 # Visual Studio Code
 .vscode/
 
-# ESP32
-*.bin
-*.elf
-*.map
+# Kiro
+.kiro/
 
 # Python
 __pycache__/

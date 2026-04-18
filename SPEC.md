@@ -38,6 +38,12 @@
 - **Format**: MP3/OGG from SD card
 - **Filter**: RC low-pass (1kΩ + 10nF)
 
+### SD Card (SPI)
+- **MOSI**: GPIO 23
+- **MISO**: GPIO 19
+- **CLK**: GPIO 14
+- **CS**: GPIO 5
+
 ### Controls
 - **Play/Pause Button**: GPIO 0
 - **Next Button**: GPIO 2
@@ -63,11 +69,9 @@
 │   ├── CDGParser.h        # CDG parser header
 │   ├── Player.cpp         # Karaoke player logic
 │   ├── Player.h           # Player header
-│   ├── AudioOutput.cpp    # Audio PWM output
-│   ├── AudioOutput.h      # Audio header
+│   ├── AudioPlayer.cpp    # Audio PWM output
+│   ├── AudioPlayer.h      # Audio header
 │   └── font6x8.h          # 6x8 font bitmap
-├── test/
-│   └── README
 ├── platformio.ini         # PlatformIO configuration
 ├── README.md              # User documentation
 └── SPEC.md               # This specification

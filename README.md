@@ -33,6 +33,7 @@ Reproductor de karaoke para ESP32 con salida de video compuesto NTSC.
                     │  │   18      │──┼────────────────────┤
                     │  │   19      │  │                    │
                     │  │   23      │  │                    │
+                    │  │   14      │  │                    │
                     │  │    5      │  │                    │
                     │  └───────────┘  │                    │
                     └─────────────────┘                    │
@@ -65,7 +66,7 @@ Reproductor de karaoke para ESP32 con salida de video compuesto NTSC.
          │    ESP32      Lector SD                         │
          │    GPIO 23 ──► MOSI                             │
          │    GPIO 19 ◄── MISO                             │
-         │    GPIO 18 ──► CLK                              │
+         │    GPIO 14 ──► CLK                              │
          │    GPIO 5  ──► CS                               │
          │    GND      ──► GND                             │
          │    3.3V     ──► VCC (si soporta 3.3V)          │
@@ -100,15 +101,13 @@ Reproductor de karaoke para ESP32 con salida de video compuesto NTSC.
 | 18 | Audio Out | Filtro RC → Speaker |
 | 23 | SD MOSI | SD lector MOSI |
 | 19 | SD MISO | SD lector MISO |
-| 18 | SD CLK | SD lector CLK |
+| 14 | SD CLK | SD lector CLK |
 | 5 | SD CS | SD lector CS |
 | 0 | Botón Play/Pause | Botón → GND |
 | 2 | Botón Siguiente | Botón → GND |
 | 4 | Botón Anterior | Botón → GND |
 | 13 | Botón Vol- | Botón → GND |
 | 15 | Botón Vol+ | Botón → GND |
-
-**Nota**: GPIO 18 se usa para audio PWM Y clock SD. El filtro RC para audio está en serie, no afecta la señal SPI.
 
 ## Instalación
 
@@ -180,23 +179,23 @@ El parser implementa los siguientes comandos del formato CDG:
 - `Scroll Copy` (24): Desplazamiento con copia
 - `Define Transparent` (28): Color transparente
 - `Load Static Color Table` (30): Paleta de colores
-- `Load Static Data` (38): Datos de color adicionales
+- `Load Static Data` (31): Datos de color adicionales
 
 ## Estructura del Proyecto
 
 ```
 ESPoke/
-├── SPEC. md               # Especificación técnica
+├── SPEC.md                # Especificación técnica
 ├── platformio.ini         # Configuración de PlatformIO
 ├── README.md              # Este archivo
 └── src/
-    ├── main. cpp          # Programa principal
+    ├── main.cpp           # Programa principal
     ├── CDGParser.h        # Parser CDG (cabecera)
     ├── CDGParser.cpp      # Implementación del parser CDG
     ├── Player.h           # Reproductor (cabecera)
     ├── Player.cpp         # Lógica del reproductor
-    ├── AudioOutput.h      # Salida de audio PWM
-    └── AudioOutput.cpp    # Implementación de audio
+    ├── AudioPlayer.h      # Salida de audio PWM
+    └── AudioPlayer.cpp    # Implementación de audio
 ```
 
 ## Créditos y Referencias

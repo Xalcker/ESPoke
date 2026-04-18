@@ -1,6 +1,7 @@
 #include "CDGParser.h"
 
-CDGParser::CDGParser() : transparentColor(0xFF) {
+CDGParser::CDGParser() : scrollBuffer(nullptr) {
+    mutex = xSemaphoreCreateMutex();
     memset(state.pixels, 0, sizeof(state.pixels));
     memset(state.colorTable, 0, sizeof(state.colorTable));
     state.transparentColor = 0xFF;
@@ -8,7 +9,6 @@ CDGParser::CDGParser() : transparentColor(0xFF) {
     state.scrollOffsetY = 0;
     state.scrollHDirection = 0;
     state.scrollVDirection = 0;
-    memset(colorTable, 0, sizeof(colorTable));
 }
 
 bool CDGParser::init(File file) {
@@ -16,35 +16,57 @@ bool CDGParser::init(File file) {
     if (!cdgFile) {
         return false;
     }
-    
+
+    lock();
     memset(state.pixels, 0, sizeof(state.pixels));
     memset(state.colorTable, 0, sizeof(state.colorTable));
     state.transparentColor = 0xFF;
     state.scrollOffsetX = 0;
     state.scrollOffsetY = 0;
-    
+
+    // Allocate scroll buffer on heap once (64,800 bytes)
+    if (!scrollBuffer) {
+        scrollBuffer = (uint8_t*)malloc(CDG_WIDTH * CDG_HEIGHT);
+    }
+    unlock();
+
     return true;
+}
+
+void CDGParser::lock() {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+}
+
+void CDGParser::unlock() {
+    xSemaphoreGive(mutex);
 }
 
 bool CDGParser::getNextCommand() {
     if (!cdgFile.available()) {
         return false;
     }
-    
+
     uint8_t packet[CDG_PACKET_SIZE];
     if (cdgFile.read(packet, CDG_PACKET_SIZE) != CDG_PACKET_SIZE) {
         return false;
     }
-    
+
+    // Only process CD+G packets (command byte masked = 0x09)
     if ((packet[0] & 0x3F) != 0x09) {
-        return false;
+        return true; // not a CDG packet, skip
     }
-    
-    uint16_t data = ((packet[1] & 0x3F) << 8) | packet[2];
-    uint8_t instruction = data & CDG_INSTRUCTION_MASK;
-    uint16_t commandData = (data >> 6) & CDG_INSTRUCTION_DATA_MASK;
-    
-    executeCommand(instruction, commandData);
+
+    uint8_t instruction = packet[1] & 0x3F;
+
+    // Extract the 16-byte data payload, each byte masked to 6 bits
+    uint8_t data[CDG_DATA_SIZE];
+    for (int i = 0; i < CDG_DATA_SIZE; i++) {
+        data[i] = packet[4 + i] & 0x3F;
+    }
+
+    lock();
+    executeCommand(instruction, data);
+    unlock();
     return true;
 }
 
@@ -56,48 +78,42 @@ bool CDGParser::getNextCommands(int maxCommands) {
     return count > 0;
 }
 
-void CDGParser::executeCommand(uint8_t instruction, uint16_t data) {
-    uint8_t rawData[4];
-    rawData[0] = data & 0xFF;
-    rawData[1] = (data >> 8) & 0xFF;
-    rawData[2] = (data >> 4) & 0xFF;
-    rawData[3] = data & 0xFF;
-    
+void CDGParser::executeCommand(uint8_t instruction, uint8_t* data) {
     switch (instruction) {
         case CDG_MEMORY_PRESET:
-            memoryPreset((data >> 1) & 0x0F, (data >> 1) & 0x0F);
+            memoryPreset(data[0] & 0x0F, data[1] & 0x0F);
             break;
-            
+
         case CDG_BORDER_PRESET:
-            borderPreset((data >> 1) & 0x0F);
+            borderPreset(data[0] & 0x0F);
             break;
-            
+
         case CDG_TILE_BLOCK:
-            tileBlock(rawData, false);
+            tileBlock(data, false);
             break;
-            
+
         case CDG_TILE_BLOCK_XOR:
-            tileBlock(rawData, true);
+            tileBlock(data, true);
             break;
-            
+
         case CDG_SCROLL_PRESET:
-            scroll((data >> 2) & 0x3F, (data >> 8) & 0x3F, false);
+            scroll(data, false);
             break;
-            
+
         case CDG_SCROLL_COPY:
-            scroll((data >> 2) & 0x3F, (data >> 8) & 0x3F, true);
+            scroll(data, true);
             break;
-            
+
         case CDG_DEFINE_TRANSPARENT:
-            defineTransparent(data & 0x0F);
+            defineTransparent(data[0] & 0x0F);
             break;
-            
+
         case CDG_LOAD_STATIC_COLOR_TABLE:
-            loadColorTable(rawData);
+            loadColorTable(data, 0);
             break;
-            
+
         case CDG_LOAD_STATIC_DATA:
-            loadStaticData(rawData);
+            loadColorTable(data, 8);
             break;
     }
 }
@@ -125,24 +141,16 @@ void CDGParser::tileBlock(uint8_t* data, bool xorMode) {
     int color1 = data[1] & 0x0F;
     int row = (data[2] & 0x1F) * 12;
     int col = (data[3] & 0x3F) * 6;
-    
+
     for (int j = 0; j < 12; j++) {
+        uint8_t rowBits = data[4 + j] & 0x3F; // 6 pixels packed in 6 bits
         for (int i = 0; i < 6; i++) {
-            int idx = j * 6 + i;
-            uint8_t color = (data[4 + idx] & 0x30) >> 4;
-            color |= (data[4 + idx] & 0x03) << 2;
-            
-            if (color == 0) {
-                color = color0;
-            } else if (color == 1) {
-                color = color1;
-            } else {
-                continue;
-            }
-            
+            int bit = (rowBits >> (5 - i)) & 0x01;
+            uint8_t color = bit ? color1 : color0;
+
             int x = col + i;
             int y = row + j;
-            
+
             if (xorMode) {
                 setPixel(x, y, getPixel(x, y) ^ color);
             } else {
@@ -152,89 +160,103 @@ void CDGParser::tileBlock(uint8_t* data, bool xorMode) {
     }
 }
 
-void CDGParser::scroll(int hScroll, int vScroll, bool copy) {
-    int hCmd = (hScroll >> 4) & 0x03;
-    int hOffset = hScroll & 0x3F;
-    int vCmd = (vScroll >> 4) & 0x03;
-    int vOffset = vScroll & 0x3F;
-    
-    uint8_t fillColor = 0;
-    if (!copy) {
-        fillColor = state.colorTable[0] & 0x0F;
-    }
-    
-    int newX = state.scrollOffsetX;
-    int newY = state.scrollOffsetY;
-    
-    switch (vCmd) {
-        case 0: newY = vOffset; break;
-        case 1: newY += vOffset; break;
-        case 2: newY -= vOffset; break;
-    }
-    
+// Scroll uses heap-allocated scrollBuffer instead of stack to avoid
+// blowing the 4KB FreeRTOS task stack with a 64KB local array.
+void CDGParser::scroll(uint8_t* data, bool copy) {
+    if (!scrollBuffer) return; // safety check
+
+    uint8_t color = data[0] & 0x0F;
+    int hCmd    = (data[1] >> 4) & 0x03;
+    int hOffset = data[1] & 0x07;
+    int vCmd    = (data[2] >> 4) & 0x03;
+    int vOffset = data[2] & 0x0F;
+
+    int shiftX = 0;
+    int shiftY = 0;
+
     switch (hCmd) {
-        case 0: newX = hOffset; break;
-        case 1: newX += hOffset; break;
-        case 2: newX -= hOffset; break;
+        case 0: break;
+        case 1: shiftX = 6; break;
+        case 2: shiftX = -6; break;
     }
-    
-    while (newX < 0) newX += CDG_WIDTH;
-    while (newX >= CDG_WIDTH) newX -= CDG_WIDTH;
-    while (newY < 0) newY += CDG_HEIGHT;
-    while (newY >= CDG_HEIGHT) newY -= CDG_HEIGHT;
-    
-    if (newX != state.scrollOffsetX || newY != state.scrollVDirection) {
-        uint8_t tempPixels[CDG_WIDTH * CDG_HEIGHT];
-        memcpy(tempPixels, state.pixels, sizeof(tempPixels));
-        
-        int shiftX = (newX - state.scrollOffsetX);
-        int shiftY = (newY - state.scrollOffsetY);
-        
-        if (shiftX < 0) shiftX += CDG_WIDTH;
-        if (shiftY < 0) shiftY += CDG_HEIGHT;
-        
-        for (int y = 0; y < CDG_HEIGHT; y++) {
-            for (int x = 0; x < CDG_WIDTH; x++) {
-                int srcX = (x - shiftX + CDG_WIDTH) % CDG_WIDTH;
-                int srcY = (y - shiftY + CDG_HEIGHT) % CDG_HEIGHT;
-                state.pixels[x + y * CDG_WIDTH] = tempPixels[srcX + srcY * CDG_WIDTH];
+
+    switch (vCmd) {
+        case 0: break;
+        case 1: shiftY = 12; break;
+        case 2: shiftY = -12; break;
+    }
+
+    state.scrollOffsetX = hOffset;
+    state.scrollOffsetY = vOffset;
+
+    if (shiftX == 0 && shiftY == 0) return;
+
+    memcpy(scrollBuffer, state.pixels, CDG_WIDTH * CDG_HEIGHT);
+
+    for (int y = 0; y < CDG_HEIGHT; y++) {
+        for (int x = 0; x < CDG_WIDTH; x++) {
+            int srcX = x - shiftX;
+            int srcY = y - shiftY;
+
+            if (copy) {
+                srcX = (srcX + CDG_WIDTH) % CDG_WIDTH;
+                srcY = (srcY + CDG_HEIGHT) % CDG_HEIGHT;
+                state.pixels[x + y * CDG_WIDTH] = scrollBuffer[srcX + srcY * CDG_WIDTH];
+            } else {
+                if (srcX >= 0 && srcX < CDG_WIDTH && srcY >= 0 && srcY < CDG_HEIGHT) {
+                    state.pixels[x + y * CDG_WIDTH] = scrollBuffer[srcX + srcY * CDG_WIDTH];
+                } else {
+                    state.pixels[x + y * CDG_WIDTH] = color;
+                }
             }
         }
     }
-    
-    state.scrollOffsetX = newX;
-    state.scrollOffsetY = newY;
 }
 
 void CDGParser::defineTransparent(uint8_t color) {
     state.transparentColor = color;
 }
 
-void CDGParser::loadColorTable(uint8_t* data) {
-    int index = ((data[0] & 0x0F) << 4);
-    for (int i = 0; i < 16; i++) {
-        state.colorTable[index + i] = ((data[2 * i + 1] & 0x0F) << 4) | (data[2 * i + 2] & 0x0F);
+void CDGParser::loadColorTable(uint8_t* data, int tableOffset) {
+    for (int i = 0; i < 8; i++) {
+        int idx = tableOffset + i;
+        if (idx >= 16) break;
+
+        uint8_t highByte = data[i * 2] & 0x3F;
+        uint8_t lowByte  = data[i * 2 + 1] & 0x3F;
+
+        // CDG color: [---RRRRGG] [---GGBBBB]
+        int r = (highByte >> 2) & 0x0F;
+        int g = ((highByte & 0x03) << 2) | ((lowByte >> 4) & 0x03);
+        int b = lowByte & 0x0F;
+
+        // Map RGB to hue (0-15) and brightness for composite palette
+        int brightness = (r + g + b) / 3;
+        int hue = 0;
+        if (r + g + b > 0) {
+            if (r >= g && r >= b) {
+                hue = (g > b) ? 1 : 14;
+            } else if (g >= r && g >= b) {
+                hue = (r > b) ? 3 : 6;
+            } else {
+                hue = (r > g) ? 12 : 9;
+            }
+        }
+
+        state.colorTable[idx] = ((hue & 0x0F) << 4) | (brightness & 0x0F);
     }
 }
 
 void CDGParser::loadStaticData(uint8_t* data) {
-    int index = ((data[0] & 0x3F) << 4) | ((data[1] & 0xF0) >> 4);
-    for (int i = 0; i < 12; i++) {
-        uint8_t b = data[2 + i];
-        state.colorTable[16 + index + i] = b;
-    }
+    loadColorTable(data, 8);
 }
 
 void CDGParser::setPixel(int x, int y, uint8_t color) {
     if (x < 0 || x >= CDG_WIDTH || y < 0 || y >= CDG_HEIGHT) return;
-    
-    int offset = x + y * CDG_WIDTH;
-    state.pixels[offset] = color;
+    state.pixels[x + y * CDG_WIDTH] = color;
 }
 
 uint8_t CDGParser::getPixel(int x, int y) {
     if (x < 0 || x >= CDG_WIDTH || y < 0 || y >= CDG_HEIGHT) return 0;
-    
-    int offset = x + y * CDG_WIDTH;
-    return state.pixels[offset];
+    return state.pixels[x + y * CDG_WIDTH];
 }

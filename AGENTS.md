@@ -46,7 +46,7 @@ ESP32 GPIO Connections:
   SD Card (SPI):
     GPIO 23 ──► MOSI
     GPIO 19 ◄── MISO
-    GPIO 18 ──► CLK
+    GPIO 14 ──► CLK
     GPIO  5 ──► CS
 
   Buttons (Pull-Up, active LOW):
