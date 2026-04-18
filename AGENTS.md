@@ -52,8 +52,11 @@ ESP32 GPIO Connections:
     GND            ──► RCA Outer (ground)
 
   Audio (PWM):
-    GPIO 18 ──┬──[1kΩ]──┬──► Speaker
-              │         ├──[10nF]──► GND
+    GPIO 18 ──[1kΩ]──┬──► Speaker
+                      │
+                    [10nF]
+                      │
+                     GND
 
   SD Card (SPI):
     GPIO 23 ──► MOSI
