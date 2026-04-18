@@ -69,9 +69,9 @@ void AudioPlayer::pcmCallback(MP3FrameInfo &info, short *pcm, size_t len, void* 
 
         pcmRing[pcmWritePos] = sample;
         pcmWritePos = (pcmWritePos + 1) % PCM_RING_BUF_SIZE;
-        portENTER_CRITICAL_ISR(&timerMux);
+        portENTER_CRITICAL(&timerMux);
         pcmCount++;
-        portEXIT_CRITICAL_ISR(&timerMux);
+        portEXIT_CRITICAL(&timerMux);
     }
 }
 

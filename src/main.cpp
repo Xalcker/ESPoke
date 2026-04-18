@@ -316,17 +316,27 @@ void updatePlaying() {
 // Screensaver (static noise)
 // ============================================================
 void renderScreensaver() {
+    // Draw sparse random dots instead of full-screen pixel-by-pixel
+    // to avoid freezing the system (~76K dot() calls per frame is too slow)
     int xres = CompositeColorOutput::XRES;
     int yres = CompositeColorOutput::YRES;
 
-    for (int y = 0; y < yres; y++) {
-        for (int x = 0; x < xres; x++) {
-            int hue = random(16);
-            uint8_t brightness = random(256);
-            graphics.setHue(hue);
-            graphics.dot(x, y, brightness);
-        }
+    for (int i = 0; i < 200; i++) {
+        int x = random(xres);
+        int y = random(yres);
+        int hue = random(16);
+        uint8_t brightness = random(60);
+        graphics.setHue(hue);
+        graphics.dot(x, y, brightness);
     }
+
+    // "ESPoke" text floating
+    int textX = (frameCount * 2) % (xres - 60);
+    int textY = 100 + sin(frameCount * 0.05) * 40;
+    graphics.setHue((frameCount / 8) % 16);
+    graphics.setTextColor(40);
+    graphics.setCursor(textX, textY);
+    graphics.print("ESPoke!");
 }
 
 bool checkScreensaverWake() {
@@ -338,13 +348,23 @@ bool checkScreensaverWake() {
 // ============================================================
 // Utilities
 // ============================================================
+// Non-blocking debounce: returns true once per press (on release)
+static uint32_t btnLastPress[40] = {0};  // indexed by pin number
+static bool btnWasPressed[40] = {false};
+const uint32_t DEBOUNCE_MS = 50;
+
 bool debounceButton(int pin) {
-    if (digitalRead(pin) == LOW) {
-        delay(50);
-        if (digitalRead(pin) == LOW) {
-            while (digitalRead(pin) == LOW); // wait for release
-            return true;
-        }
+    if (pin >= 40) return false;
+    bool pressed = (digitalRead(pin) == LOW);
+    uint32_t now = millis();
+
+    if (pressed && !btnWasPressed[pin] && (now - btnLastPress[pin] > DEBOUNCE_MS)) {
+        btnWasPressed[pin] = true;
+        btnLastPress[pin] = now;
+        return true;
+    }
+    if (!pressed) {
+        btnWasPressed[pin] = false;
     }
     return false;
 }
@@ -393,7 +413,7 @@ void setup() {
 
     Serial.println("Initializing player...");
 
-    SPIClass sdSPI(VSPI);
+    static SPIClass sdSPI(VSPI);  // static: must outlive setup() for SD reads
     sdSPI.begin(SD_CLK, SD_MISO, SD_MOSI, SD_CS);
 
     if (player.init(sdSPI, SD_CS)) {

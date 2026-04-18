@@ -11,6 +11,17 @@ CDGParser::CDGParser() : scrollBuffer(nullptr) {
     state.scrollVDirection = 0;
 }
 
+CDGParser::~CDGParser() {
+    if (scrollBuffer) {
+        free(scrollBuffer);
+        scrollBuffer = nullptr;
+    }
+    if (mutex) {
+        vSemaphoreDelete(mutex);
+        mutex = nullptr;
+    }
+}
+
 bool CDGParser::init(File file) {
     cdgFile = file;
     if (!cdgFile) {
@@ -108,11 +119,11 @@ void CDGParser::executeCommand(uint8_t instruction, uint8_t* data) {
             defineTransparent(data[0] & 0x0F);
             break;
 
-        case CDG_LOAD_STATIC_COLOR_TABLE:
+        case CDG_LOAD_COLOR_TABLE_LOW:
             loadColorTable(data, 0);
             break;
 
-        case CDG_LOAD_STATIC_DATA:
+        case CDG_LOAD_COLOR_TABLE_HIGH:
             loadColorTable(data, 8);
             break;
     }
@@ -245,10 +256,6 @@ void CDGParser::loadColorTable(uint8_t* data, int tableOffset) {
 
         state.colorTable[idx] = ((hue & 0x0F) << 4) | (brightness & 0x0F);
     }
-}
-
-void CDGParser::loadStaticData(uint8_t* data) {
-    loadColorTable(data, 8);
 }
 
 void CDGParser::setPixel(int x, int y, uint8_t color) {

@@ -21,14 +21,15 @@ enum CDGCommand {
     CDG_SCROLL_PRESET = 20,
     CDG_SCROLL_COPY = 24,
     CDG_DEFINE_TRANSPARENT = 28,
-    CDG_LOAD_STATIC_COLOR_TABLE = 30,
-    CDG_TILE_BLOCK_XOR = 38,
-    CDG_LOAD_STATIC_DATA = 31
+    CDG_LOAD_COLOR_TABLE_LOW = 30,
+    CDG_LOAD_COLOR_TABLE_HIGH = 31,
+    CDG_TILE_BLOCK_XOR = 38
 };
 
 class CDGParser {
 public:
     CDGParser();
+    ~CDGParser();
     bool init(File cdgFile);
     bool getNextCommand();
     bool getNextCommands(int maxCommands);
@@ -65,7 +66,6 @@ private:
     void scroll(uint8_t* data, bool copy);
     void defineTransparent(uint8_t color);
     void loadColorTable(uint8_t* data, int tableOffset);
-    void loadStaticData(uint8_t* data);
 
     void setPixel(int x, int y, uint8_t color);
     uint8_t getPixel(int x, int y);

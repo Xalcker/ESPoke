@@ -56,7 +56,8 @@ void Player::play() {
 void Player::pause() {
     playing = false;
     audioPlayer.pause();
-    closeSong();
+    // Don't call closeSong() here — it destroys the decoder and closes files,
+    // making resume impossible. Just pause audio playback.
 }
 
 void Player::selectSong(int index) {
