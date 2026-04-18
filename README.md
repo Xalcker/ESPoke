@@ -5,8 +5,8 @@ Reproductor de karaoke para ESP32 con salida de video compuesto NTSC.
 ## Características
 
 - **Video**: Salida composite NTSC (336x240) usando la librería ESP32CompositeColorVideo
-- **Formatos**: Soporta CDG (Compact Disc Graphics) - archivos MP3+G, OGG+G
-- **Audio**: Reproducción de archivos MP3/OGG desde tarjeta SD
+- **Formatos**: Soporta CDG (Compact Disc Graphics) - archivos MP3+G
+- **Audio**: Reproducción de archivos MP3 desde tarjeta SD
 - **Control**: Botones para Play/Pause, Siguiente, Anterior, Volumen +/-
 
 ## Hardware Necesario
@@ -134,14 +134,11 @@ pio run --target upload
 / karaoke/
    ├── song1.cdg
    ├── song1.mp3
-   ├── song2.cdg
-   └── song2.ogg
+   └── song2.cdg
 ```
 
 ### Formatos soportados
 - **CDG + MP3**: Archivos .cdg con audio .mp3
-- **CDG + OGG**: Archivos .cdg con audio .ogg
-- **CDG + WAV**: Archivos .cdg con audio .wav
 
 Los archivos de video (.cdg) deben tener el mismo nombre que el audio correspondiente.
 
