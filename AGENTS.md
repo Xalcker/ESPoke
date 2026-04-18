@@ -14,6 +14,18 @@ pio device monitor   # View serial output
   ```
   lib_deps = https://github.com/marciot/ESP32CompositeColorVideo.git
   ```
+- `arduino-libhelix` - MP3 decoder:
+  ```
+  lib_deps = https://github.com/pschatzmann/arduino-libhelix.git
+  ```
+
+## Audio LEDC Configuration
+
+- Channel: 0
+- Frequency: 40 kHz PWM carrier
+- Bits: 8
+- Pin: GPIO 18
+- Timer for sample output: 3
 
 ## Library API Notes
 

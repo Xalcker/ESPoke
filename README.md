@@ -162,8 +162,9 @@ El APLL permite un control de frecuencia muy preciso necesario para generar colo
 ### Audio PWM
 
 El audio se genera usando el periférico **LED PWM** del ESP32:
-- Frecuencia: 20 MHz
-- Resolución: 7 bits
+- Canal LEDC: 0
+- Frecuencia: 40 kHz
+- Resolución: 8 bits
 - Pin de salida: GPIO 18
 
 Esta técnica produce audio de calidad suficiente para sonidos clásicos de los 80s.
@@ -186,6 +187,7 @@ El parser implementa los siguientes comandos del formato CDG:
 ```
 ESPoke/
 ├── SPEC.md                # Especificación técnica
+├── AGENTS.md              # Guía para agentes IA
 ├── platformio.ini         # Configuración de PlatformIO
 ├── README.md              # Este archivo
 └── src/
@@ -195,16 +197,18 @@ ESPoke/
     ├── Player.h           # Reproductor (cabecera)
     ├── Player.cpp         # Lógica del reproductor
     ├── AudioPlayer.h      # Salida de audio PWM
-    └── AudioPlayer.cpp    # Implementación de audio
+    ├── AudioPlayer.cpp    # Implementación de audio
+    └── font6x8.h          # Fuente 6x8 bitmap
 ```
 
 ## Créditos y Referencias
 
 ### Librerías y Proyectos Base
-- **Video**: [ESP32CompositeColorVideo](https://github. com/marciot/ESP32CompositeColorVideo) de marciot
+- **Video**: [ESP32CompositeColorVideo](https://github.com/marciot/ESP32CompositeColorVideo) de marciot
+- **Audio MP3**: [arduino-libhelix](https://github.com/pschatzmann/arduino-libhelix) de pschatzmann
 - **Técnica APLL**: Basada en [esp_8_bit](https://github.com/CornN64/esp_8_bit) de rossumur/CornN64
 - **Formato CDG**: Especificación pública de CD+Graphics
-- **Referencia karaoke**: [PyKaraoke](https://github. com/kelvinlawson/pykaraoke)
+- **Referencia karaoke**: [PyKaraoke](https://github.com/kelvinlawson/pykaraoke)
 
 ### Cómo funciona el video NTSC
 

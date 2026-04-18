@@ -33,10 +33,10 @@
 
 ### Audio Output
 - **Method**: LED PWM on GPIO 18
-- **LEDC Channel**: 1
+- **LEDC Channel**: 0
 - **Frequency**: 40 kHz PWM carrier
 - **Resolution**: 8 bits
-- **Format**: MP3 from SD card
+- **Format**: MP3 from SD card (libhelix decoder)
 - **Filter**: RC low-pass (1kΩ + 10nF)
 
 ### SD Card (SPI)
@@ -82,8 +82,11 @@
 ## Dependencies
 
 - ESP32CompositeColorVideo (installed via PlatformIO library manager)
+- arduino-libhelix (MP3 decoder from GitHub)
 - SD (built-in ESP32 SD library)
 - SPI (built-in ESP32 SPI library)
+- WiFi (built-in ESP32 WiFi library)
+- WebServer (built-in ESP32 WebServer library)
 
 ## Acceptance Criteria
 
