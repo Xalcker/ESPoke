@@ -41,7 +41,7 @@ const unsigned long SPLASH_DURATION = 3000; // 3 seconds
 
 int browserSelection = 0;   // currently highlighted file in browser
 int browserScrollTop = 0;   // first visible file index
-const int BROWSER_VISIBLE_LINES = 20; // max files visible on screen
+const int BROWSER_VISIBLE_LINES = 18; // max files visible on screen
 
 // --- Globals ---
 CompositeGraphics graphics(CompositeColorOutput::XRES, CompositeColorOutput::YRES);
@@ -63,43 +63,42 @@ bool debounceButton(int pin);
 // Splash screen
 // ============================================================
 void renderSplash() {
-    // Raster bars top and bottom
-    int hue = (frameCount / 8) % 16;
-    graphics.setHue(hue);
-    graphics.fillRect(0, 30, CompositeColorOutput::XRES, 4, 40);
-    graphics.setHue((hue + 8) % 16);
-    graphics.fillRect(0, 200, CompositeColorOutput::XRES, 4, 40);
+    int baseHue = (frameCount / 4) % 16;
 
-    // Side decorations
-    for (int y = 40; y < 200; y += 12) {
-        int h = (y / 12 + frameCount / 4) % 16;
-        graphics.setHue(h);
-        graphics.fillRect(0, y, 3, 6, 35);
-        graphics.fillRect(CompositeColorOutput::XRES - 3, y, 3, 6, 35);
+    graphics.fillRect(0, 0, CompositeColorOutput::XRES, CompositeColorOutput::YRES, 0);
+
+    for (int y = 0; y < CompositeColorOutput::YRES; y += 2) {
+        int hue = (baseHue + y / 16) % 16;
+        graphics.setHue(hue);
+        graphics.fillRect(0, y, CompositeColorOutput::XRES, 2, 8 + (y / 20));
     }
 
-    // Title
+    int borderHue = (baseHue + 8) % 16;
+    graphics.setHue(borderHue);
+    graphics.fillRect(20, 20, CompositeColorOutput::XRES - 40, 2, 50);
+    graphics.fillRect(20, 218, CompositeColorOutput::XRES - 40, 2, 50);
+    graphics.fillRect(20, 20, 2, 200, 50);
+    graphics.fillRect(298, 20, 2, 200, 50);
+
+    graphics.setHue((baseHue + 4) % 16);
+    graphics.fillRect(60, 70, 200, 2, 45);
+
+    for (int i = 0; i < 5; i++) {
+        int x = 85 + i * 30;
+        int h = (baseHue + i * 3) % 16;
+        graphics.setHue(h);
+        int h1 = 30 + sin((frameCount * 0.1) + i * 0.8) * 15;
+        int h2 = 30 + sin((frameCount * 0.1) + i * 0.8 + 2) * 15;
+        graphics.fillRect(x, 130 - h1, 8, h1, 50);
+        graphics.fillRect(x, 135, 8, h2, 35);
+    }
+
+    unsigned long elapsed = millis() - splashStartTime;
+    int progress = (elapsed > 1500) ? 196 : (int)(elapsed * 196 / 1500);
     graphics.setHue(0);
-    graphics.setTextColor(55);
-    graphics.setCursor(120, 80);
-    graphics.print("ESpoke!");
-
-    // Subtitle with color cycle
-    graphics.setHue((frameCount / 10) % 16);
-    graphics.setTextColor(40);
-    graphics.setCursor(90, 110);
-    graphics.print("KARAOKE PLAYER");
-
-    // Version / credits
-    graphics.setHue(0);
-    graphics.setTextColor(30);
-    graphics.setCursor(110, 150);
-    graphics.print("ESP32 + NTSC");
-
-    // Loading indicator
-    graphics.setTextColor(25);
-    graphics.setCursor(100, 220);
-    graphics.print("Cargando...");
+    graphics.fillRect(60, 205, 200, 8, 20);
+    graphics.setHue((baseHue + 6) % 16);
+    graphics.fillRect(62, 207, progress, 4, 45);
 }
 
 void updateSplash() {
@@ -115,24 +114,22 @@ void updateSplash() {
 // ============================================================
 void renderBrowser() {
     int total = player.getTotalFiles();
+    const int TOP_MARGIN = 20;
 
     // Header bar
     graphics.setHue(6);
-    graphics.fillRect(0, 0, CompositeColorOutput::XRES, 14, 30);
+    graphics.fillRect(0, TOP_MARGIN, CompositeColorOutput::XRES, 14, 30);
     graphics.setHue(0);
     graphics.setTextColor(55);
-    graphics.setCursor(4, 3);
+    graphics.setCursor(4, TOP_MARGIN + 3);
     graphics.print("ESpoke! - Seleccionar cancion");
 
     if (total == 0) {
         graphics.setHue(0);
         graphics.setTextColor(40);
-        graphics.setCursor(60, 100);
-        graphics.print("No hay archivos CDG");
-        graphics.setCursor(50, 120);
-        graphics.print("en la tarjeta SD");
-        return;
-    }
+        graphics.setCursor(55, 110);
+        graphics.print("No hay archivos CDG en SD");
+    } else {
 
     // Ensure selection is in visible range
     if (browserSelection < browserScrollTop) {
@@ -143,7 +140,7 @@ void renderBrowser() {
     }
 
     // File list
-    int yStart = 18;
+    int yStart = TOP_MARGIN + 18;
     for (int i = 0; i < BROWSER_VISIBLE_LINES && (browserScrollTop + i) < total; i++) {
         int fileIdx = browserScrollTop + i;
         int y = yStart + i * 10;
@@ -194,15 +191,16 @@ void renderBrowser() {
         graphics.setCursor(CompositeColorOutput::XRES - 12, yStart + (BROWSER_VISIBLE_LINES - 1) * 10);
         graphics.print("v");
     }
+    }
 
     // Footer
     graphics.setHue(0);
     graphics.setTextColor(25);
-    graphics.setCursor(4, 228);
+    graphics.setCursor(4, 240 - TOP_MARGIN);
     graphics.print("PLAY:ok  NEXT/PREV:navegar");
 
     // File count
-    graphics.setCursor(250, 228);
+    graphics.setCursor(250, 240 - TOP_MARGIN);
     graphics.print(browserSelection + 1);
     graphics.print("/");
     graphics.print(total);
