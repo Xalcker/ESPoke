@@ -195,8 +195,7 @@ void AudioPlayer::update() {
 void AudioPlayer::startTimer(int rate) {
     stopTimer();
 
-    // Timer 1, prescaler 80 → 1µs per tick
-    audioTimer = timerBegin(1, 80, true);
+    audioTimer = timerBegin(3, 80, true);
     timerAttachInterrupt(audioTimer, &AudioPlayer::onTimer, true);
     timerAlarmWrite(audioTimer, 1000000 / rate, true);
     timerAlarmEnable(audioTimer);
