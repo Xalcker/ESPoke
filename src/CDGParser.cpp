@@ -1,6 +1,6 @@
 #include "CDGParser.h"
 
-CDGParser::CDGParser() : scrollBuffer(nullptr), packetsProcessed(0) {
+CDGParser::CDGParser() : scrollBuffer(nullptr), packetsProcessed(0), bufferSrc(nullptr), bufferSize(0), bufferPos(0) {
     mutex = xSemaphoreCreateMutex();
     memset(state.pixels, 0, sizeof(state.pixels));
     memset(state.colorTable, 0, sizeof(state.colorTable));
@@ -24,6 +24,7 @@ CDGParser::~CDGParser() {
 
 bool CDGParser::init(File file) {
     cdgFile = file;
+    bufferSrc = nullptr;
     if (!cdgFile) {
         return false;
     }
@@ -45,6 +46,25 @@ bool CDGParser::init(File file) {
     return true;
 }
 
+bool CDGParser::initFromBuffer(const uint8_t* buffer, size_t size) {
+    bufferSrc = buffer;
+    bufferSize = size;
+    bufferPos = 0;
+
+    lock();
+    memset(state.pixels, 0, sizeof(state.pixels));
+    memset(state.colorTable, 0, sizeof(state.colorTable));
+    state.transparentColor = 0xFF;
+    state.scrollOffsetX = 0;
+    state.scrollOffsetY = 0;
+    packetsProcessed = 0;
+    if (!scrollBuffer) {
+        scrollBuffer = (uint8_t*)malloc(CDG_WIDTH * CDG_HEIGHT);
+    }
+    unlock();
+    return true;
+}
+
 void CDGParser::lock() {
     xSemaphoreTake(mutex, portMAX_DELAY);
 }
@@ -54,13 +74,15 @@ void CDGParser::unlock() {
 }
 
 bool CDGParser::getNextCommand() {
-    if (!cdgFile.available()) {
-        return false;
-    }
-
     uint8_t packet[CDG_PACKET_SIZE];
-    if (cdgFile.read(packet, CDG_PACKET_SIZE) != CDG_PACKET_SIZE) {
-        return false;
+
+    if (bufferSrc) {
+        if (bufferPos + CDG_PACKET_SIZE > bufferSize) return false;
+        memcpy_P(packet, bufferSrc + bufferPos, CDG_PACKET_SIZE);
+        bufferPos += CDG_PACKET_SIZE;
+    } else {
+        if (!cdgFile.available()) return false;
+        if (cdgFile.read(packet, CDG_PACKET_SIZE) != CDG_PACKET_SIZE) return false;
     }
 
     // Only process CD+G packets (command byte masked = 0x09)

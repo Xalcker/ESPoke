@@ -12,6 +12,7 @@
 #include "font6x8.h"
 
 #include "Player.h"
+#include "splash_cdg.h"
 
 // --- Pin definitions ---
 #define BTN_PLAY   0
@@ -67,42 +68,23 @@ bool debounceButton(int pin);
 // Splash screen
 // ============================================================
 void renderSplash() {
-    int baseHue = (frameCount / 4) % 16;
+    CDGParser::CDGState& st = player.getCDGParser().getState();
 
-    graphics.fillRect(0, 0, CompositeColorOutput::XRES, CompositeColorOutput::YRES, 0);
+    int offsetX = (CompositeColorOutput::XRES - CDG_DISPLAY_WIDTH) / 2;
+    int offsetY = (CompositeColorOutput::YRES - CDG_DISPLAY_HEIGHT) / 2;
 
-    for (int y = 0; y < CompositeColorOutput::YRES; y += 2) {
-        int hue = (baseHue + y / 16) % 16;
-        graphics.setHue(hue);
-        graphics.fillRect(0, y, CompositeColorOutput::XRES, 2, 8 + (y / 20));
+    for (int y = 0; y < CDG_DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < CDG_DISPLAY_WIDTH; x++) {
+            uint8_t colorIndex = st.pixels[x + y * CDG_WIDTH];
+            if (colorIndex != st.transparentColor) {
+                uint8_t color = st.colorTable[colorIndex & 0x0F];
+                uint8_t hue = (color >> 4) & 0x0F;
+                uint8_t brightness = color & 0x0F;
+                graphics.setHue(hue);
+                graphics.dot(offsetX + x, offsetY + y, brightness * 4);
+            }
+        }
     }
-
-    int borderHue = (baseHue + 8) % 16;
-    graphics.setHue(borderHue);
-    graphics.fillRect(20, 20, CompositeColorOutput::XRES - 40, 2, 50);
-    graphics.fillRect(20, 218, CompositeColorOutput::XRES - 40, 2, 50);
-    graphics.fillRect(20, 20, 2, 200, 50);
-    graphics.fillRect(298, 20, 2, 200, 50);
-
-    graphics.setHue((baseHue + 4) % 16);
-    graphics.fillRect(60, 70, 200, 2, 45);
-
-    for (int i = 0; i < 5; i++) {
-        int x = 85 + i * 30;
-        int h = (baseHue + i * 3) % 16;
-        graphics.setHue(h);
-        int h1 = 30 + sin((frameCount * 0.1) + i * 0.8) * 15;
-        int h2 = 30 + sin((frameCount * 0.1) + i * 0.8 + 2) * 15;
-        graphics.fillRect(x, 130 - h1, 8, h1, 50);
-        graphics.fillRect(x, 135, 8, h2, 35);
-    }
-
-    unsigned long elapsed = millis() - splashStartTime;
-    int progress = (elapsed > 1500) ? 196 : (int)(elapsed * 196 / 1500);
-    graphics.setHue(0);
-    graphics.fillRect(60, 205, 200, 8, 20);
-    graphics.setHue((baseHue + 6) % 16);
-    graphics.fillRect(62, 207, progress, 4, 45);
 }
 
 void updateSplash() {
@@ -418,6 +400,10 @@ void setup() {
     composite.init();
     graphics.init();
     graphics.setFont(font);
+
+    // Init splash from embedded CDG (reuse player's parser)
+    player.getCDGParser().initFromBuffer(splash_cdg, SPLASH_CDG_SIZE);
+    player.getCDGParser().getNextCommands(SPLASH_CDG_PACKETS);
 
     // Start with splash
     appState = STATE_SPLASH;

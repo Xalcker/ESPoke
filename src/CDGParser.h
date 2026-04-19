@@ -31,6 +31,7 @@ public:
     CDGParser();
     ~CDGParser();
     bool init(File cdgFile);
+    bool initFromBuffer(const uint8_t* buffer, size_t size);
     bool getNextCommand();
     bool getNextCommands(int maxCommands);
     void syncToTime(unsigned long elapsedMs);
@@ -55,6 +56,9 @@ public:
 
 private:
     File cdgFile;
+    const uint8_t* bufferSrc;
+    size_t bufferSize;
+    size_t bufferPos;
     CDGState state;
     SemaphoreHandle_t mutex;
     unsigned long packetsProcessed;
