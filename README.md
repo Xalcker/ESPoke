@@ -8,6 +8,12 @@ Karaoke player for ESP32 with composite NTSC video output.
 - **Formats**: Supports CDG (Compact Disc Graphics) - MP3+G files
 - **Audio**: MP3 playback from SD card
 - **Controls**: Buttons for Play/Pause, Next, Previous, Volume +/-
+- **CDG/Audio Sync**: Time-based synchronization at 300 packets/sec
+- **Auto-advance**: Automatically plays next song; returns to browser after last
+- **Recursive Scan**: Finds CDG files in subdirectories (organize by genre, language, etc.)
+- **File Browser**: Scrollable song list, shows filenames without path or extension
+- **Splash Screen**: Animated intro with gradient, equalizer bars, and progress bar
+- **Screensaver**: Activates after 5 minutes of inactivity
 
 ## Required Hardware
 
@@ -131,11 +137,18 @@ pio run --target upload
 
 ### File structure
 ```
-/ karaoke/
-   ├── song1.cdg
-   ├── song1.mp3
-   └── song2.cdg
+/karaoke/
+   ├── rock/
+   │   ├── song1.cdg
+   │   └── song1.mp3
+   ├── pop/
+   │   ├── song2.cdg
+   │   └── song2.mp3
+   ├── song3.cdg
+   └── song3.mp3
 ```
+
+Files can be in the root or organized in subdirectories (by genre, language, etc.). The browser shows only the filename without path or extension.
 
 ### Supported formats
 - **CDG + MP3**: .cdg files with .mp3 audio
@@ -231,6 +244,7 @@ The project uses LED PWM for audio but there are other options:
 - Verify the SD card is formatted as FAT32
 - .cdg files must be in the root or a subfolder
 - File names in 8.3 format (no spaces)
+- Max 100 files supported across all directories
 
 ### Noisy audio
 - Check the RC filter

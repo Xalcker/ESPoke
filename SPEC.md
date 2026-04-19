@@ -56,10 +56,15 @@
 ## Features
 
 1. **CDG Playback**: Parse and display CDG graphics on composite video
-2. **Audio Playback**: Play MP3/OGG audio tracks from SD card
-3. **File Browser**: Browse and select karaoke files from SD card
-4. **Playback Controls**: Play, pause, next, previous, volume control
-5. **Lyrics Display**: CDG graphics contain lyrics with timing
+2. **Audio Playback**: Play MP3 audio tracks from SD card
+3. **CDG/Audio Sync**: Time-based synchronization (300 packets/sec from elapsed time)
+4. **Auto-advance**: Plays next song automatically; returns to browser after last
+5. **Recursive Scan**: Finds CDG files in subdirectories (max 100 files)
+6. **File Browser**: Browse and select karaoke files, shows filename without path/extension
+7. **Playback Controls**: Play, pause, next, previous, volume control
+8. **Splash Screen**: Animated intro with gradient, equalizer bars, progress bar
+9. **Screensaver**: Static noise + floating text after 5 min inactivity
+10. **Dual-core**: Core 0 for CDG/Audio processing, Core 1 for rendering/input
 
 ## Project Structure
 
@@ -85,14 +90,13 @@
 - arduino-libhelix (MP3 decoder from GitHub)
 - SD (built-in ESP32 SD library)
 - SPI (built-in ESP32 SPI library)
-- WiFi (built-in ESP32 WiFi library)
-- WebServer (built-in ESP32 WebServer library)
 
 ## Acceptance Criteria
 
 1. ✓ ESP32 boots and initializes composite video output
-2. ✓ Can read CDG files from SD card
+2. ✓ Can read CDG files from SD card (recursive scan)
 3. ✓ CDG graphics display correctly on composite video
-4. ✓ Audio playback works with video synchronization
-5. ✓ Buttons control playback (play/pause/next/prev)
-6. ✓ Project compiles without errors
+4. ✓ Audio playback works with time-based CDG synchronization
+5. ✓ Buttons control playback (play/pause/next/prev/volume)
+6. ✓ Auto-advance to next song, return to browser after last
+7. ✓ Project compiles without errors (RAM: 31.7%, Flash: 13.1%)
