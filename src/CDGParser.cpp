@@ -276,15 +276,32 @@ void CDGParser::loadColorTable(uint8_t* data, int tableOffset) {
         int b = lowByte & 0x0F;
 
         // Map RGB to hue (0-15) and brightness for composite palette
+        // Atari palette hues (mid-brightness RGB values from video_out.h)
+        static const uint8_t hue_r[] = {104,104,128,146,156,155,142,122, 97, 74, 57, 51, 55, 71, 93,118};
+        static const uint8_t hue_g[] = {104,122,108, 93, 80, 73, 72, 78, 90,104,119,130,136,135,127,114};
+        static const uint8_t hue_b[] = {104,  0, 18, 47, 88,132,170,194,198,182,150,107, 64, 28,  0, 11};
+
         int brightness = (r + g + b) / 3;
         int hue = 0;
-        if (r + g + b > 0) {
-            if (r >= g && r >= b) {
-                hue = (g > b) ? 1 : 14;
-            } else if (g >= r && g >= b) {
-                hue = (r > b) ? 3 : 6;
-            } else {
-                hue = (r > g) ? 12 : 9;
+
+        // Gray/white/black: use hue 0
+        int maxC = (r > g) ? ((r > b) ? r : b) : ((g > b) ? g : b);
+        int minC = (r < g) ? ((r < b) ? r : b) : ((g < b) ? g : b);
+        if (maxC - minC <= 2) {
+            hue = 0;
+        } else {
+            // Find closest Atari hue by RGB distance (skip hue 0 = gray)
+            int r8 = r * 17, g8 = g * 17, b8 = b * 17;
+            int bestDist = 999999;
+            for (int h = 1; h < 16; h++) {
+                int dr = r8 - hue_r[h];
+                int dg = g8 - hue_g[h];
+                int db = b8 - hue_b[h];
+                int dist = dr*dr + dg*dg + db*db;
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    hue = h;
+                }
             }
         }
 

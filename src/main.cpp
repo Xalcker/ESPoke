@@ -70,11 +70,11 @@ bool debounceButton(int pin);
 void renderSplash() {
     CDGParser::CDGState& st = player.getCDGParser().getState();
 
-    int offsetX = (CompositeColorOutput::XRES - CDG_DISPLAY_WIDTH) / 2;
-    int offsetY = (CompositeColorOutput::YRES - CDG_DISPLAY_HEIGHT) / 2;
+    int offsetX = (CompositeColorOutput::XRES - CDG_WIDTH) / 2;
+    int offsetY = (CompositeColorOutput::YRES - CDG_HEIGHT) / 2;
 
-    for (int y = 0; y < CDG_DISPLAY_HEIGHT; y++) {
-        for (int x = 0; x < CDG_DISPLAY_WIDTH; x++) {
+    for (int y = 0; y < CDG_HEIGHT; y++) {
+        for (int x = 0; x < CDG_WIDTH; x++) {
             uint8_t colorIndex = st.pixels[x + y * CDG_WIDTH];
             if (colorIndex != st.transparentColor) {
                 uint8_t color = st.colorTable[colorIndex & 0x0F];
@@ -223,11 +223,11 @@ void renderCDG() {
     player.getCDGParser().lock();
     CDGParser::CDGState& state = player.getCDGParser().getState();
 
-    int offsetX = (CompositeColorOutput::XRES - CDG_DISPLAY_WIDTH) / 2;
-    int offsetY = (CompositeColorOutput::YRES - CDG_DISPLAY_HEIGHT) / 2;
+    int offsetX = (CompositeColorOutput::XRES - CDG_WIDTH) / 2;
+    int offsetY = (CompositeColorOutput::YRES - CDG_HEIGHT) / 2;
 
-    for (int y = 0; y < CDG_DISPLAY_HEIGHT; y++) {
-        for (int x = 0; x < CDG_DISPLAY_WIDTH; x++) {
+    for (int y = 0; y < CDG_HEIGHT; y++) {
+        for (int x = 0; x < CDG_WIDTH; x++) {
             int srcX = (x + state.scrollOffsetX) % CDG_WIDTH;
             if (srcX < 0) srcX += CDG_WIDTH;
             int srcY = (y + state.scrollOffsetY) % CDG_HEIGHT;
