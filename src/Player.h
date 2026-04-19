@@ -24,6 +24,8 @@ public:
     void setVolume(uint8_t vol);
     uint8_t getVolume() { return volume; }
     bool isPlaying() { return playing; }
+    bool isSongFinished() { return songFinished; }
+    unsigned long getPlayElapsedMs();
     
     void update();
     
@@ -43,6 +45,8 @@ private:
     int currentIndex;
     uint8_t volume;
     bool playing;
+    bool songFinished;
+    unsigned long playStartTime;
     char currentFileName[64];
     
     void loadSong(int index);

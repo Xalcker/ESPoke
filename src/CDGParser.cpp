@@ -1,6 +1,6 @@
 #include "CDGParser.h"
 
-CDGParser::CDGParser() : scrollBuffer(nullptr) {
+CDGParser::CDGParser() : scrollBuffer(nullptr), packetsProcessed(0) {
     mutex = xSemaphoreCreateMutex();
     memset(state.pixels, 0, sizeof(state.pixels));
     memset(state.colorTable, 0, sizeof(state.colorTable));
@@ -34,6 +34,7 @@ bool CDGParser::init(File file) {
     state.transparentColor = 0xFF;
     state.scrollOffsetX = 0;
     state.scrollOffsetY = 0;
+    packetsProcessed = 0;
 
     // Allocate scroll buffer on heap once (64,800 bytes)
     if (!scrollBuffer) {
@@ -78,6 +79,7 @@ bool CDGParser::getNextCommand() {
     lock();
     executeCommand(instruction, data);
     unlock();
+    packetsProcessed++;
     return true;
 }
 
@@ -87,6 +89,16 @@ bool CDGParser::getNextCommands(int maxCommands) {
         count++;
     }
     return count > 0;
+}
+
+// Advance CDG stream to match elapsed time (300 packets/sec)
+void CDGParser::syncToTime(unsigned long elapsedMs) {
+    unsigned long targetPacket = (elapsedMs * 300UL) / 1000UL;
+    int catchUp = (int)(targetPacket - packetsProcessed);
+    if (catchUp <= 0) return;
+    // Cap to avoid blocking too long in one call
+    if (catchUp > 300) catchUp = 300;
+    getNextCommands(catchUp);
 }
 
 void CDGParser::executeCommand(uint8_t instruction, uint8_t* data) {

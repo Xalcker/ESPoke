@@ -33,8 +33,10 @@ public:
     bool init(File cdgFile);
     bool getNextCommand();
     bool getNextCommands(int maxCommands);
+    void syncToTime(unsigned long elapsedMs);
     uint8_t* getColorTable() { return state.colorTable; }
     uint8_t getTransparentColor() { return state.transparentColor; }
+    unsigned long getPacketsProcessed() { return packetsProcessed; }
 
     void lock();
     void unlock();
@@ -55,6 +57,7 @@ private:
     File cdgFile;
     CDGState state;
     SemaphoreHandle_t mutex;
+    unsigned long packetsProcessed;
 
     // Heap-allocated scroll buffer to avoid 64KB stack allocation
     uint8_t* scrollBuffer;

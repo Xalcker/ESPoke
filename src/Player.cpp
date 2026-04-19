@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false) {
+Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false), songFinished(false), playStartTime(0) {
     currentFileName[0] = '\0';
 }
 
@@ -22,14 +22,16 @@ bool Player::scanDirectory(const char* path) {
         return false;
     }
 
-    totalFiles = 0;
-
     File file = root.openNextFile();
     while (file && totalFiles < MAX_FILES) {
-        if (!file.isDirectory()) {
+        if (file.isDirectory()) {
+            scanDirectory(file.path());
+        } else {
             String name = file.name();
             if (name.endsWith(".cdg") || name.endsWith(".CDG")) {
-                name.toCharArray(fileList[totalFiles], 64);
+                // Store full path for nested files
+                String fullPath = file.path();
+                fullPath.toCharArray(fileList[totalFiles], 64);
                 totalFiles++;
             }
         }
@@ -49,6 +51,8 @@ void Player::play() {
 
     if (!playing) {
         playing = true;
+        songFinished = false;
+        playStartTime = millis();
         loadSong(currentIndex);
     }
 }
@@ -90,6 +94,10 @@ void Player::setVolume(uint8_t vol) {
 void Player::update() {
     if (!playing) return;
     audioPlayer.update();
+    if (!audioPlayer.isPlaying()) {
+        songFinished = true;
+        playing = false;
+    }
 }
 
 void Player::loadSong(int index) {
@@ -141,4 +149,9 @@ String Player::getMP3Filename(const char* cdgFilename) {
 const char* Player::getFileName(int index) {
     if (index < 0 || index >= totalFiles) return nullptr;
     return fileList[index];
+}
+
+unsigned long Player::getPlayElapsedMs() {
+    if (!playing) return 0;
+    return millis() - playStartTime;
 }

@@ -165,16 +165,18 @@ void renderBrowser() {
         // Show file name without extension
         const char* name = player.getFileName(fileIdx);
         if (name) {
-            // Print up to 50 chars, skip extension
-            int len = strlen(name);
+            // Skip path prefix, show only filename without extension
+            const char* slash = strrchr(name, '/');
+            const char* display = slash ? slash + 1 : name;
+            int len = strlen(display);
             int dotPos = -1;
             for (int j = len - 1; j >= 0; j--) {
-                if (name[j] == '.') { dotPos = j; break; }
+                if (display[j] == '.') { dotPos = j; break; }
             }
             int printLen = (dotPos > 0) ? dotPos : len;
             if (printLen > 50) printLen = 50;
             for (int j = 0; j < printLen; j++) {
-                char c = name[j];
+                char c = display[j];
                 // Replace underscores with spaces for readability
                 if (c == '_') c = ' ';
                 graphics.print(c);
@@ -374,12 +376,23 @@ bool debounceButton(int pin) {
 // ============================================================
 void cdgAudioTask(void* param) {
     Serial.println("CDG/Audio task started on Core 0");
-    const int COMMANDS_PER_FRAME = 75;
 
     while (true) {
-        if (appState == STATE_PLAYING && player.isPlaying()) {
-            player.update();
-            player.getCDGParser().getNextCommands(COMMANDS_PER_FRAME);
+        if (appState == STATE_PLAYING) {
+            if (player.isPlaying()) {
+                player.update();
+                player.getCDGParser().syncToTime(player.getPlayElapsedMs());
+            } else if (player.isSongFinished()) {
+                int total = player.getTotalFiles();
+                if (browserSelection + 1 < total) {
+                    browserSelection++;
+                    player.selectSong(browserSelection);
+                    player.play();
+                } else {
+                    browserSelection = 0;
+                    appState = STATE_BROWSER;
+                }
+            }
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
