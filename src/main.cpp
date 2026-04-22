@@ -39,7 +39,7 @@ enum AppState {
 
 AppState appState = STATE_SPLASH;
 unsigned long splashStartTime = 0;
-const unsigned long SPLASH_DURATION = 3000; // 3 seconds
+const unsigned long SPLASH_DURATION = 5000; // 5 seconds
 
 unsigned long lastActivityTime = 0;
 const unsigned long SCREENSAVER_TIMEOUT = 300000; // 5 minutes
