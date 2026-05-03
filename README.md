@@ -192,14 +192,26 @@ The parser implements the following CDG format commands:
 - `Load Color Table Low` (30): Color palette (colors 0-7)
 - `Load Color Table High` (31): Color palette (colors 8-15)
 
+## Project Documentation
+
+Technical documentation and development guidelines are now consolidated in the [`.kiro/steering/`](file:///.kiro/steering/) directory:
+
+- [**Overview**](file:///.kiro/steering/project_overview.md): High-level goals and acceptance criteria.
+- [**Features**](file:///.kiro/steering/features.md): Detailed logic for sync, auto-advance, and scanning.
+- [**Architecture**](file:///.kiro/steering/architecture.md): Dual-core task distribution and state machine.
+- [**Hardware**](file:///.kiro/steering/hardware-pinout.md): GPIO assignments and wiring diagrams.
+- [**CDG Parser**](file:///.kiro/steering/cdg-parser.md): CDG format rules and command values.
+- [**Video API**](file:///.kiro/steering/composite-video-api.md): ESP32CompositeColorVideo library usage.
+- [**Build**](file:///.kiro/steering/build.md): PlatformIO commands and dependencies.
+- [**Code Style**](file:///.kiro/steering/code_style.md): Naming conventions and patterns.
+
 ## Project Structure
 
 ```
 ESPoke/
-├── SPEC.md                # Technical specification
-├── AGENTS.md              # AI agent guide
+├── .kiro/steering/        # Technical steering documents
 ├── platformio.ini         # PlatformIO configuration
-├── README.md              # This file
+├── README.md              # User documentation
 └── src/
     ├── main.cpp           # Main program
     ├── CDGParser.h        # CDG parser (header)
