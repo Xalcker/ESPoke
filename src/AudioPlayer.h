@@ -28,8 +28,10 @@ public:
     bool loadFile(const char* filename);
     void play();
     void pause();
+    void resume();
     void stop();
     bool isPlaying() { return playing; }
+    bool isFileLoaded() { return fileLoaded; }
     void setVolume(uint8_t vol);
     uint8_t getVolume() { return volume; }
     void update();  // call from task loop to feed the decoder
