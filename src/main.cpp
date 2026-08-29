@@ -209,7 +209,12 @@ void updateBrowser() {
     }
 
     if (debounceButton(BTN_PLAY)) {
-        player.selectSong(browserSelection);
+        // Only (re)select when switching to a different song — selectSong()
+        // closes the current file, which would defeat pause/resume when the
+        // highlighted entry is the song that's already loaded/paused.
+        if (browserSelection != player.getCurrentFileIndex()) {
+            player.selectSong(browserSelection);
+        }
         player.play();
         appState = STATE_PLAYING;
         lastActivityTime = millis();

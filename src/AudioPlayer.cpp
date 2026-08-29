@@ -143,6 +143,24 @@ void AudioPlayer::pause() {
     ledcWrite(AUDIO_LEDC_CHANNEL, 0);
 }
 
+// Resume playback after pause() without recreating the decoder or
+// re-opening the file — keeps the current read/decode position intact.
+void AudioPlayer::resume() {
+    if (!fileLoaded || playing || !decoder) return;
+
+    // stopTimer() tore down the hw timer in pause(); restart it if the
+    // stream had already reached its first decoded frame. If playback
+    // was paused before that point, update()/pcmCallback will start the
+    // timer once the first frame decodes, same as a fresh play().
+    if (timerStarted && !audioTimer) {
+        startTimer(sampleRate);
+    }
+
+    currentVolume = volume;
+    playing = true;
+    Serial.println("MP3 playback resumed");
+}
+
 void AudioPlayer::stop() {
     playing = false;
     stopTimer();

@@ -47,6 +47,7 @@ private:
     bool playing;
     bool songFinished;
     unsigned long playStartTime;
+    unsigned long pauseStartTime;
     char currentFileName[64];
     
     void loadSong(int index);

@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false), songFinished(false), playStartTime(0) {
+Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false), songFinished(false), playStartTime(0), pauseStartTime(0) {
     currentFileName[0] = '\0';
 }
 
@@ -48,20 +48,35 @@ bool Player::scanDirectory(const char* path) {
 
 void Player::play() {
     if (totalFiles == 0) return;
+    if (playing) return;
 
-    if (!playing) {
-        playing = true;
-        songFinished = false;
+    playing = true;
+    songFinished = false;
+
+    if (audioPlayer.isFileLoaded()) {
+        // Resuming from a pause: the file/decoder are still in place
+        // (see pause() below), so just restart audio output instead of
+        // reloading the song from the beginning. Shift playStartTime
+        // forward by the time spent paused so CDG sync (which is driven
+        // by wall-clock elapsed time) doesn't try to fast-forward through
+        // the packets it "missed" while paused.
+        playStartTime += millis() - pauseStartTime;
+        audioPlayer.resume();
+    } else {
         playStartTime = millis();
         loadSong(currentIndex);
     }
 }
 
 void Player::pause() {
+    if (playing) {
+        pauseStartTime = millis();
+    }
     playing = false;
     audioPlayer.pause();
     // Don't call closeSong() here — it destroys the decoder and closes files,
-    // making resume impossible. Just pause audio playback.
+    // making resume impossible. Just pause audio playback; play() detects
+    // the still-loaded file and resumes instead of reloading.
 }
 
 void Player::selectSong(int index) {
