@@ -24,6 +24,11 @@ def make_packet(instruction, data):
         pkt[4 + i] = data[i] & 0x3F
     return bytes(pkt)
 
+def nop_packet():
+    """Real no-op: byte 0 != 0x09, so the parser skips it immediately
+    instead of running it through executeCommand() for nothing."""
+    return bytes(24)
+
 def memory_preset(color):
     """Cmd 1: fill screen with color."""
     return make_packet(1, [color & 0x0F, 0])
@@ -116,7 +121,7 @@ def generate_cdg(filename):
 
     # Pad remaining time with empty packets
     while len(packets) < TOTAL_PACKETS:
-        packets.append(make_packet(0, [0]*16))  # no-op (not 0x09 subchannel)
+        packets.append(nop_packet())
 
     with open(filename, 'wb') as f:
         for pkt in packets[:TOTAL_PACKETS]:
