@@ -376,6 +376,12 @@ void cdgAudioTask(void* param) {
                     player.selectSong(browserSelection);
                     player.play();
                 } else {
+                    // Last track in the list finished on its own (nothing
+                    // to auto-advance to) — release its file handles
+                    // instead of leaving them open while idle in the
+                    // browser. selectSong()/next()/previous() already do
+                    // this when the user explicitly switches songs.
+                    player.releaseCurrentSong();
                     browserSelection = 0;
                     appState = STATE_BROWSER;
                 }

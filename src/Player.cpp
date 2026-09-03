@@ -5,7 +5,7 @@ Player::Player() : totalFiles(0), currentIndex(0), volume(128), playing(false), 
 }
 
 bool Player::init(SPIClass &spi, uint8_t csPin) {
-    if (!SD.begin(csPin, spi, 2)) {
+    if (!SD.begin(csPin, spi, SD_SPI_FREQUENCY_HZ)) {
         Serial.println("SD Card initialization failed!");
         return false;
     }
@@ -86,6 +86,10 @@ void Player::selectSong(int index) {
     currentIndex = index;
 }
 
+void Player::releaseCurrentSong() {
+    closeSong();
+}
+
 void Player::next() {
     closeSong();
     currentIndex = (currentIndex + 1) % totalFiles;
@@ -130,10 +134,28 @@ void Player::loadSong(int index) {
     }
 
     String mp3Name = getMP3Filename(currentFileName);
+    if (mp3Name.length() == 0) {
+        // No matching MP3 for this CDG — there's nothing to play. Don't try
+        // to "decode" the .cdg file itself as audio (it would read as
+        // garbage with no real-time pacing and finish almost instantly).
+        // Mark it finished so the caller's finished-song handling skips to
+        // the next track, same as if a song had played through normally.
+        Serial.println("No matching MP3 found, skipping song");
+        closeSong();
+        playing = false;
+        songFinished = true;
+        return;
+    }
+
     if (audioPlayer.loadFile(mp3Name.c_str())) {
         if (playing) {
             audioPlayer.play();
         }
+    } else {
+        // MP3 existed a moment ago but failed to open — same treatment.
+        closeSong();
+        playing = false;
+        songFinished = true;
     }
 }
 
@@ -158,7 +180,9 @@ String Player::getMP3Filename(const char* cdgFilename) {
         return name + ".MP3";
     }
 
-    return String(cdgFilename);
+    // No companion MP3 — return empty to signal "no audio", instead of
+    // falling back to the .cdg file itself (which isn't audio at all).
+    return String();
 }
 
 const char* Player::getFileName(int index) {
